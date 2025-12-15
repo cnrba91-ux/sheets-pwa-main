@@ -1,0 +1,29 @@
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+}
+
+.th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 8px;
+}
+
+.td {
+    padding: 8px;
+    border-bottom: 1px solid #f1f5f9;
+    white-space: nowrap;
+}
+
+.in {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.out {
+    color: var(--danger);
+    font-weight: 600;
+}

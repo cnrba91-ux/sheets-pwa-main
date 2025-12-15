@@ -1,66 +1,96 @@
 import { useEffect, useState } from 'react';
 import { initGoogleAuth, requestAccessToken } from './auth/googleAuth';
-import { readSheet, appendRow } from './sheets/sheetsApi';
+
+import { useTransactions } from './features/transactions/useTransactions';
+import { TransactionsPage } from './features/transactions/TransactionsPage';
+import styles from './App.module.css';
+
+/* ================= CONFIG ================= */
 
 const CLIENT_ID = '1075777305463-k6611jptqjj5or1dnu7srj4npcp1bdtr.apps.googleusercontent.com';
-const SPREADSHEET_ID = '1ap8fxHqIO3vnM8-VAhKwproUpR1bQHJZg-Baleqtz-Q';
-const RANGE = 'A:C';
+const SPREADSHEET_ID = '11cvtf3h0ok8lrBBzt2hGAN3j2hfxF1bW4MMgW4S_XEQ';
+const RANGE = 'A:J';
+
+type Page = 'transactions' | 'actions';
+
+/* ================= APP ================= */
 
 function App() {
   const [token, setToken] = useState<string | null>(null);
-  const [rows, setRows] = useState<string[][]>([]);
+  const [page, setPage] = useState<Page>('transactions');
+
+  const {
+    headers,
+    filteredRows,
+    filters,
+    setFilters,
+    distinct,
+    updateCell,
+    loadTransactions
+  } = useTransactions();
 
   useEffect(() => {
     initGoogleAuth(CLIENT_ID);
   }, []);
 
   const handleLogin = () => {
-    requestAccessToken(token => {
-      setToken(token);
-      loadData(token);
+    requestAccessToken(accessToken => {
+      setToken(accessToken);
+      loadTransactions(SPREADSHEET_ID, RANGE, accessToken);
     });
   };
 
-  const loadData = async (accessToken: string) => {
-    const data = await readSheet(SPREADSHEET_ID, RANGE, accessToken);
-    setRows(data);
-  };
-
-  const handleAddRow = async () => {
-    if (!token) return;
-
-    await appendRow(
-      SPREADSHEET_ID,
-      RANGE,
-      [new Date().toISOString(), 'PWA', 'Hello'],
-      token
-    );
-
-    loadData(token);
-  };
-
   return (
-    <div style={{ padding: 24 }}>
-      <h1>Sheets PWA</h1>
+    <div className={styles.app}>
+      {/* ================= APP BAR ================= */}
+      <header className={styles.appBar}>
+        <div className={styles.brand}>CNR’s Tracker</div>
 
+        {token && (
+          <div className={styles.nav}>
+            <button
+              className={page === 'transactions' ? styles.navActive : styles.navBtn}
+              onClick={() => setPage('transactions')}
+            >
+              All Transactions
+            </button>
+
+            <button
+              className={page === 'actions' ? styles.navActive : styles.navBtn}
+              onClick={() => setPage('actions')}
+            >
+              Action Required
+            </button>
+          </div>
+        )}
+      </header>
+
+      {/* ================= LOGIN ================= */}
       {!token && (
-        <button onClick={handleLogin}>
-          Connect with Google
-        </button>
+        <div className={styles.center}>
+          <button className={styles.primary} onClick={handleLogin}>
+            Connect with Google
+          </button>
+        </div>
       )}
 
-      {token && (
-        <>
-          <button onClick={handleAddRow}>
-            Add Row
-          </button>
+      {/* ================= TRANSACTIONS ================= */}
+      {token && page === 'transactions' && (
+        <TransactionsPage
+          headers={headers}
+          rows={filteredRows}
+          filters={filters}
+          setFilters={setFilters}
+          distinct={distinct}
+          updateCell={updateCell}
+        />
+      )}
 
-          <ul>
-            {rows.map((row, i) => (
-              <li key={i}>{row.join(' | ')}</li>
-            ))}
-          </ul>
-        </>
+      {/* ================= ACTIONS ================= */}
+      {token && page === 'actions' && (
+        <div className={styles.placeholder}>
+          Action Required – Coming Soon
+        </div>
       )}
     </div>
   );
