@@ -1,3 +1,5 @@
+import styles from './MatrixTable.module.css';
+
 type Props = {
     headers: string[];
     rows: string[][];
@@ -20,12 +22,16 @@ export function MatrixTable({
     formatAmount
 }: Props) {
     return (
-        <section style={styles.wrap}>
-            <table style={styles.table}>
+        <section className={styles.wrap}>
+            <div className={styles.header}>
+                <h2 className={styles.title}>Transactions</h2>
+                <p className={styles.subtitle}>Showing {rows.length} items</p>
+            </div>
+            <table className={styles.table}>
                 <thead>
                     <tr>
                         {headers.map(h => (
-                            <th key={h} style={styles.th}>{h}</th>
+                            <th key={h} className={styles.th}>{h}</th>
                         ))}
                     </tr>
                 </thead>
@@ -42,7 +48,7 @@ export function MatrixTable({
                                 const categories = categoryMap[row[5]] || [];
 
                                 return (
-                                    <td key={j} style={styles.td}>
+                                    <td key={j} className={styles.td}>
                                         {isInOut && (
                                             <select value={cell}
                                                 onChange={e => updateCell(i, j, e.target.value)}>
@@ -93,10 +99,3 @@ export function MatrixTable({
         </section>
     );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-    wrap: { flex: 1, overflow: 'auto' },
-    table: { width: '100%', borderCollapse: 'collapse', fontSize: 13 },
-    th: { position: 'sticky', top: 0, background: '#f9fafb', padding: 8 },
-    td: { padding: 8, borderBottom: '1px solid #f1f5f9' }
-};

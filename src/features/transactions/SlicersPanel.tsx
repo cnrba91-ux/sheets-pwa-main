@@ -1,4 +1,5 @@
 import type { Filters } from './useTransactions';
+import styles from './SlicersPanel.module.css';
 
 type Props = {
     filters: Filters;
@@ -8,7 +9,11 @@ type Props = {
 
 export function SlicersPanel({ filters, setFilters, distinct }: Props) {
     return (
-        <aside style={styles.slicers}>
+        <aside className={styles.slicers}>
+            <div className={styles.slicersHeader}>
+                <div className={styles.slicersTitle}>Filters</div>
+            </div>
+
             <Slicer title="Bank" values={distinct(0)} selected={filters.bank}
                 onChange={v => setFilters({ ...filters, bank: v })} />
 
@@ -42,10 +47,10 @@ function Slicer({
     onChange: (v: string[]) => void;
 }) {
     return (
-        <div style={styles.slicer}>
-            <div style={styles.title}>{title}</div>
+        <div className={styles.slicer}>
+            <div className={styles.title}>{title}</div>
             {values.map(v => (
-                <label key={v} style={styles.item}>
+                <label key={v} className={styles.item}>
                     <input
                         type="checkbox"
                         checked={selected.includes(v)}
@@ -57,22 +62,9 @@ function Slicer({
                             )
                         }
                     />
-                    {v}
+                    {v || '(empty)'}
                 </label>
             ))}
         </div>
     );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-    slicers: {
-        width: 260,
-        background: '#fff',
-        borderRight: '1px solid #e5e7eb',
-        padding: 12,
-        overflowY: 'auto'
-    },
-    slicer: { marginBottom: 16 },
-    title: { fontWeight: 600, marginBottom: 6 },
-    item: { display: 'flex', gap: 6, fontSize: 13 }
-};

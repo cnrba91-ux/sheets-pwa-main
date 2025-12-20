@@ -1,0 +1,124 @@
+.slicers {
+    width: 250px;
+    background: var(--color-surface);
+    border-right: 1px solid var(--color-border);
+    padding: var(--space-lg);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.slicersHeader {
+    padding-bottom: var(--space-md);
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: var(--space-sm);
+}
+
+.slicersTitle {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.slicersTitle::before {
+    content: '⚙️';
+    font-size: var(--font-size-base);
+}
+
+.resetBtn {
+    font-size: var(--font-size-xs);
+    color: var(--color-primary);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    font-weight: 600;
+    transition: color var(--transition-base);
+}
+
+.resetBtn:hover {
+    color: var(--color-primary-dark);
+}
+
+.slicer {
+    margin-bottom: var(--space-sm);
+}
+
+.title {
+    font-weight: 600;
+    font-size: var(--font-size-xs);
+    margin-bottom: var(--space-sm);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.item {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--font-size-sm);
+    color: var(--color-text-primary);
+    padding: var(--space-xs) 0;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    margin-bottom: 2px;
+}
+
+.item:hover {
+    color: var(--color-primary);
+}
+
+.item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--color-primary);
+    border-radius: var(--radius-sm);
+}
+
+.item:has(input:checked) {
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+/* Scrollbar for slicers */
+.slicers::-webkit-scrollbar {
+    width: 6px;
+}
+
+.slicers::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.slicers::-webkit-scrollbar-thumb {
+    background: var(--color-border-dark);
+    border-radius: var(--radius-full);
+}
+
+.slicers::-webkit-scrollbar-thumb:hover {
+    background: var(--color-text-tertiary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .slicers {
+        width: 220px;
+        padding: var(--space-md);
+    }
+}
+
+@media (max-width: 768px) {
+    .slicers {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        max-height: 300px;
+    }
+}

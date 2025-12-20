@@ -44,7 +44,10 @@ function App() {
     <div className={styles.app}>
       {/* ================= APP BAR ================= */}
       <header className={styles.appBar}>
-        <div className={styles.brand}>CNR’s Tracker</div>
+        <div className={styles.brand}>
+          <div className={styles.brandIcon}>T</div>
+          Tracker
+        </div>
 
         {token && (
           <div className={styles.nav}>

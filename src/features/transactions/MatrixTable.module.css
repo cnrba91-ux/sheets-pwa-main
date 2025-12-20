@@ -1,29 +1,123 @@
+.wrap {
+    flex: 1;
+    overflow: auto;
+    background: var(--color-surface);
+    padding: var(--space-lg);
+}
+
+.header {
+    margin-bottom: var(--space-lg);
+}
+
+.title {
+    font-size: var(--font-size-2xl);
+    font-weight: 700;
+    color: var(--color-text-primary);
+    margin-bottom: var(--space-xs);
+}
+
+.subtitle {
+    font-size: var(--font-size-sm);
+    color: var(--color-text-secondary);
+}
+
 .table {
     width: 100%;
-    border-collapse: collapse;
-    font-size: 13px;
+    border-collapse: separate;
+    border-spacing: 0;
+    font-size: var(--font-size-sm);
 }
 
 .th {
     position: sticky;
     top: 0;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    padding: 8px;
-}
-
-.td {
-    padding: 8px;
-    border-bottom: 1px solid #f1f5f9;
+    background: var(--color-bg-tertiary);
+    padding: var(--space-md);
+    font-weight: 600;
+    text-align: left;
+    color: var(--color-text-secondary);
+    border-bottom: 1px solid var(--color-border);
+    font-size: var(--font-size-xs);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    z-index: 10;
     white-space: nowrap;
 }
 
+.th:first-child {
+    border-top-left-radius: var(--radius-md);
+}
+
+.th:last-child {
+    border-top-right-radius: var(--radius-md);
+}
+
+.td {
+    padding: var(--space-md);
+    border-bottom: 1px solid var(--color-border-light);
+    color: var(--color-text-primary);
+    transition: all var(--transition-base);
+    background: transparent;
+}
+
+/* Row hover effect */
+.table tbody tr {
+    transition: all var(--transition-base);
+}
+
+.table tbody tr:hover {
+    background: var(--color-surface-hover);
+}
+
+.table tbody tr:hover .td {
+    border-bottom-color: var(--color-border);
+}
+
+/* Input and Select Styling */
+.td input,
+.td select {
+    width: 100%;
+    min-width: 120px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    color: var(--color-text-primary);
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-sm);
+    font-size: var(--font-size-sm);
+    transition: all var(--transition-base);
+}
+
+.td input:focus,
+.td select:focus {
+    background: var(--color-surface);
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+.td input:hover,
+.td select:hover {
+    border-color: var(--color-border-dark);
+}
+
+/* Amount column styling */
+.table tbody tr td:nth-child(8) {
+    font-weight: 600;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
+}
+
+/* Date column styling */
+.table tbody tr td:nth-child(3) {
+    color: var(--color-text-secondary);
+    font-size: var(--font-size-sm);
+}
+
 .in {
-    color: var(--success);
+    color: var(--color-success);
     font-weight: 600;
 }
 
 .out {
-    color: var(--danger);
+    color: var(--color-danger);
     font-weight: 600;
 }

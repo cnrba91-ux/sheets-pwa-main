@@ -3,6 +3,7 @@ import { formatDate, formatAmount } from '../../domain/formatters';
 import type { Filters } from './useTransactions';
 import { MatrixTable } from './MatrixTable.tsx';
 import { SlicersPanel } from './SlicersPanel';
+import styles from './TransactionsPage.module.css';
 
 type Props = {
     headers: string[];
@@ -22,7 +23,7 @@ export function TransactionsPage({
     updateCell
 }: Props) {
     return (
-        <div style={styles.canvas}>
+        <div className={styles.canvas}>
             <SlicersPanel
                 filters={filters}
                 setFilters={setFilters}
@@ -42,7 +43,3 @@ export function TransactionsPage({
         </div>
     );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-    canvas: { display: 'flex', height: 'calc(100vh - 56px)' }
-};

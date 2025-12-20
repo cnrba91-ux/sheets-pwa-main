@@ -1,5 +1,6 @@
 import ReactDOM from 'react-dom/client';
 import App from './App';
+import './index.css';
 
 const BASE_URL = import.meta.env.BASE_URL;
 
