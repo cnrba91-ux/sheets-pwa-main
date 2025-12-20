@@ -26,7 +26,13 @@ function App() {
     setFilters,
     distinct,
     updateCell,
-    loadTransactions
+    saveChanges,
+    hasPendingChanges,
+    isSyncing,
+    isDirty,
+    loadTransactions,
+    actionCount,
+    isAttentionDone
   } = useTransactions();
 
   useEffect(() => {
@@ -38,6 +44,16 @@ function App() {
       setToken(accessToken);
       loadTransactions(SPREADSHEET_ID, RANGE, accessToken);
     });
+  };
+
+  const switchToTransactions = () => {
+    setPage('transactions');
+    setFilters({ ...filters, attentionOnly: false });
+  };
+
+  const switchToActions = () => {
+    setPage('actions');
+    setFilters({ ...filters, attentionOnly: true });
   };
 
   return (
@@ -53,17 +69,40 @@ function App() {
           <div className={styles.nav}>
             <button
               className={page === 'transactions' ? styles.navActive : styles.navBtn}
-              onClick={() => setPage('transactions')}
+              onClick={switchToTransactions}
             >
               All Transactions
             </button>
 
             <button
               className={page === 'actions' ? styles.navActive : styles.navBtn}
-              onClick={() => setPage('actions')}
+              onClick={switchToActions}
             >
               Action Required
+              {actionCount > 0 && <span className={styles.badge}>{actionCount}</span>}
             </button>
+          </div>
+        )}
+
+        {token && (
+          <div className={styles.actions}>
+            {hasPendingChanges && (
+              <button
+                className={styles.saveBtn}
+                onClick={saveChanges}
+                disabled={isSyncing}
+              >
+                {isSyncing ? 'Saving...' : 'Save to Sheet'}
+              </button>
+            )}
+            {!hasPendingChanges && (
+              <span className={styles.synced}>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ marginRight: 6 }}>
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                Synced
+              </span>
+            )}
           </div>
         )}
       </header>
@@ -77,8 +116,8 @@ function App() {
         </div>
       )}
 
-      {/* ================= TRANSACTIONS ================= */}
-      {token && page === 'transactions' && (
+      {/* ================= TRANSACTIONS / ACTIONS ================= */}
+      {token && (
         <TransactionsPage
           headers={headers}
           rows={filteredRows}
@@ -86,14 +125,9 @@ function App() {
           setFilters={setFilters}
           distinct={distinct}
           updateCell={updateCell}
+          isDirty={isDirty}
+          isAttentionDone={isAttentionDone}
         />
-      )}
-
-      {/* ================= ACTIONS ================= */}
-      {token && page === 'actions' && (
-        <div className={styles.placeholder}>
-          Action Required – Coming Soon
-        </div>
       )}
     </div>
   );

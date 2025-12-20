@@ -17,11 +17,13 @@ export function formatDate(value: string): string {
 }
 
 export function formatAmount(value: string): string {
-    const num = Number(value);
+    const raw = value.replace(/[^\d.-]/g, '');
+    const num = Number(raw);
 
     if (isNaN(num)) {
         return value;
     }
 
-    return `₹ ${num.toLocaleString('en-IN')}`;
+    const rounded = Math.round(num);
+    return `₹ ${rounded.toLocaleString('en-IN')}`;
 }

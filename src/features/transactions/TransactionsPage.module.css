@@ -1,13 +1,7 @@
 .canvas {
     display: flex;
-    height: calc(100vh - 73px);
-    background: var(--color-bg-primary);
-}
-
-@media (max-width: 768px) {
-    .canvas {
-        flex-direction: column;
-        height: auto;
-        min-height: calc(100vh - 73px);
-    }
+    flex-direction: column;
+    flex: 1;
+    background-color: var(--color-bg-primary);
+    min-height: 0;
 }

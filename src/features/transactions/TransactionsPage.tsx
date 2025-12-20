@@ -1,8 +1,8 @@
-import { CATEGORY_MAP, IN_OUT_OPTIONS, IN_CALC_OPTIONS } from '../../domain/categories';
+import { CATEGORY_MAP } from '../../domain/categories';
 import { formatDate, formatAmount } from '../../domain/formatters';
 import type { Filters } from './useTransactions';
 import { MatrixTable } from './MatrixTable.tsx';
-import { SlicersPanel } from './SlicersPanel';
+import { FilterBar } from './components/FilterBar';
 import styles from './TransactionsPage.module.css';
 
 type Props = {
@@ -12,6 +12,8 @@ type Props = {
     setFilters: (f: Filters) => void;
     distinct: (idx: number) => string[];
     updateCell: (rowIdx: number, colIdx: number, value: string) => void;
+    isDirty: (rowIdx: number, colIdx: number) => boolean;
+    isAttentionDone: (displayIdx: number) => boolean;
 };
 
 export function TransactionsPage({
@@ -20,11 +22,13 @@ export function TransactionsPage({
     filters,
     setFilters,
     distinct,
-    updateCell
+    updateCell,
+    isDirty,
+    isAttentionDone
 }: Props) {
     return (
         <div className={styles.canvas}>
-            <SlicersPanel
+            <FilterBar
                 filters={filters}
                 setFilters={setFilters}
                 distinct={distinct}
@@ -34,11 +38,12 @@ export function TransactionsPage({
                 headers={headers}
                 rows={rows}
                 updateCell={updateCell}
+                isDirty={isDirty}
                 categoryMap={CATEGORY_MAP}
-                inOutOptions={IN_OUT_OPTIONS}
-                inCalcOptions={IN_CALC_OPTIONS}
                 formatDate={formatDate}
                 formatAmount={formatAmount}
+                attentionOnly={filters.attentionOnly}
+                isAttentionDone={isAttentionDone}
             />
         </div>
     );
