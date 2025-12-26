@@ -284,6 +284,16 @@
     color: #475569;
 }
 
+.pillSavings {
+    background-color: #fef3c7;
+    color: #92400e;
+}
+
+.pillSettlement {
+    background-color: #fce7f3;
+    color: #9d174d;
+}
+
 .pillYes {
     background-color: #dbeafe;
     color: #1e40af;

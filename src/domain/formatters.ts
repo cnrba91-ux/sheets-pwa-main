@@ -27,3 +27,88 @@ export function formatAmount(value: string): string {
     const rounded = Math.round(num);
     return `₹ ${rounded.toLocaleString('en-IN')}`;
 }
+/**
+ * Safely parses various date formats including DD/MM/YY and DD/MM/YYYY
+ */
+export function parseAnyDate(val: string): string {
+    if (!val) return '0000-00-00';
+
+    // Standard JS parsing first
+    let d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+
+    // Try manual parsing for DD/MM/YY or DD/MM/YYYY
+    const parts = val.split(/[/\-.]/);
+    if (parts.length === 3) {
+        const d1 = parseInt(parts[0]);
+        const d2 = parseInt(parts[1]);
+        const d3 = parseInt(parts[2]);
+
+        // Assume DD/MM/YY if d3 is small, or DD/MM/YYYY if d3 > 100
+        let year = d3;
+        if (year < 100) year += 2000;
+
+        const date = new Date(year, d2 - 1, d1);
+        if (!isNaN(date.getTime())) return date.toISOString().split('T')[0];
+    }
+    return '0000-00-00';
+}
+
+export function normalizePayee(payee: string): string {
+    if (!payee) return '';
+    return payee
+        .toLowerCase()
+        .replace(/^(upi|imps|neft|rtgs|pos|cash|tfr|vpa|atw|atm)-/g, '') // Remove bank prefixes
+        .replace(/[^\w\s]/g, ' ') // Replace special characters with space
+        .replace(/\s+/g, ' ')    // Normalize whitespace
+        .trim();
+}
+
+/**
+ * Returns a set of unique words from a payee string for fuzzy matching.
+ */
+export function getPayeeWords(payee: string): Set<string> {
+    const normalized = normalizePayee(payee);
+    const stopWords = new Set(['dear', 'customer', 'debited', 'from', 'account', 'your', 'upi', 'transaction', 'reference', 'number', 'immediately', 'calling', 'block', 'authorised', 'auth', 'than', 'this', 'that', 'with', 'paid', 'sent', 'bank', 'vpa']);
+
+    return new Set(
+        normalized.split(' ')
+            .filter(w => {
+                // Keep words > 2 chars that aren't stop words
+                if (w.length <= 2 || stopWords.has(w)) return false;
+                // If it's a number, it must be at least 4 digits (to avoid dates/small amounts but catch Ref IDs)
+                if (/^\d+$/.test(w) && w.length < 4) return false;
+                return true;
+            })
+    );
+}
+
+/**
+ * Extracts potential reference numbers (6+ digits) from a string.
+ */
+export function extractRefIds(text: string): string[] {
+    if (!text) return [];
+    const matches = text.match(/\d{6,}/g);
+    return matches || [];
+}
+
+/**
+ * Generates a unique-ish fingerprint for a transaction to detect duplicates.
+ * Format: date|amount|normalizedPayee
+ */
+export function getTransactionFingerprint(date: string, amount: string, payee: string): string {
+    const d = parseAnyDate(date);
+    const a = Math.abs(parseFloat(amount.replace(/[^\d.-]/g, '')) || 0).toFixed(0);
+    const p = normalizePayee(payee).replace(/\s/g, ''); // Compact for fingerprint
+    return `${d}|${a}|${p}`;
+}
+
+/**
+ * Extracts month and year in MMM-YY format (e.g., Dec-25)
+ */
+export function getMonthFromDate(val: string): string {
+    const iso = parseAnyDate(val);
+    if (iso === '0000-00-00') return '';
+    const date = new Date(iso);
+    return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }).replace(' ', '-');
+}

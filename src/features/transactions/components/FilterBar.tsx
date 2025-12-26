@@ -65,6 +65,27 @@ export function FilterBar({ filters, setFilters, distinct }: Props) {
                     selected={filters.calc}
                     onChange={(v) => updateFilter('calc', v)}
                 />
+
+                {hasActiveFilters && (
+                    <button
+                        className={styles.clearBtn}
+                        onClick={() => setFilters({
+                            bank: [],
+                            acc: [],
+                            month: [],
+                            inout: [],
+                            category: [],
+                            calc: [],
+                            attentionOnly: filters.attentionOnly
+                        })}
+                    >
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                            <line x1="18" y1="6" x2="6" y2="18"></line>
+                            <line x1="6" y1="6" x2="18" y2="18"></line>
+                        </svg>
+                        Clear All
+                    </button>
+                )}
             </div>
 
             {hasActiveFilters && (

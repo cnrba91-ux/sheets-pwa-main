@@ -80,3 +80,29 @@
     font-size: var(--font-size-sm);
     color: var(--color-text-muted);
 }
+
+.clearBtn {
+    background: none;
+    border: 1px solid #e2e8f0;
+    padding: 4px 12px;
+    border-radius: var(--radius-md);
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-danger);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    margin-left: 8px;
+}
+
+.clearBtn:hover {
+    background-color: #fee2e2;
+    border-color: #fecaca;
+    color: #b91c1c;
+}
+
+.clearBtn svg {
+    opacity: 0.8;
+}

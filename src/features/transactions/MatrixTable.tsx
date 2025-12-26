@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { IN_OUT_OPTIONS } from '../../domain/categories';
 import styles from './MatrixTable.module.css';
 
 type Props = {
@@ -64,10 +65,23 @@ export function MatrixTable({
                                     return (
                                         <td key={j} className={`${styles.td} ${isDirty(i, j) ? styles.dirty : ''}`}>
                                             {isInOut && (
-                                                <div
-                                                    className={`${styles.pill} ${cell === 'In' ? styles.pillIn : styles.pillOut} ${styles.clickablePill}`}
-                                                    onClick={() => updateCell(i, j, cell === 'In' ? 'Out' : 'In')}>
-                                                    {cell}
+                                                <div className={styles.ghostWrapper}>
+                                                    <select
+                                                        className={styles.ghostSelect}
+                                                        value={cell}
+                                                        onChange={e => updateCell(i, j, e.target.value)}>
+                                                        {IN_OUT_OPTIONS.map(o => (
+                                                            <option key={o} value={o}>{o}</option>
+                                                        ))}
+                                                    </select>
+                                                    <div className={`${styles.pill} ${cell === 'In' ? styles.pillIn :
+                                                        cell === 'Out' ? styles.pillOut :
+                                                            cell === 'Savings' ? styles.pillSavings :
+                                                                cell === 'Settlement' ? styles.pillSettlement :
+                                                                    styles.pillOut
+                                                        }`}>
+                                                        {cell}
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -178,10 +192,24 @@ export function MatrixTable({
                                     </div>
 
                                     <div className={styles.cardFooter}>
-                                        <div
-                                            className={`${styles.pill} ${row[5] === 'In' ? styles.pillIn : styles.pillOut} ${styles.clickablePill}`}
-                                            onClick={() => updateCell(i, 5, row[5] === 'In' ? 'Out' : 'In')}>
-                                            {row[5]}
+                                        <div className={styles.mobileSelectWrapper} style={{ width: 'fit-content' }}>
+                                            <select
+                                                className={styles.mobileSelect}
+                                                style={{ paddingRight: '2.5rem', color: 'transparent' }}
+                                                value={row[5]}
+                                                onChange={e => updateCell(i, 5, e.target.value)}>
+                                                {IN_OUT_OPTIONS.map(o => (
+                                                    <option key={o} value={o} style={{ color: 'initial' }}>{o}</option>
+                                                ))}
+                                            </select>
+                                            <div className={`${styles.pill} ${row[5] === 'In' ? styles.pillIn :
+                                                    row[5] === 'Out' ? styles.pillOut :
+                                                        row[5] === 'Savings' ? styles.pillSavings :
+                                                            row[5] === 'Settlement' ? styles.pillSettlement :
+                                                                styles.pillOut
+                                                }`} style={{ position: 'absolute', pointerEvents: 'none', top: '50%', transform: 'translateY(-50%)', left: '8px' }}>
+                                                {row[5]}
+                                            </div>
                                         </div>
                                         <div
                                             className={`${styles.pill} ${row[8] === 'Yes' ? styles.pillYes : styles.pillNo} ${styles.clickablePill}`}

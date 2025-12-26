@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { readSheet, batchUpdateSheet } from '../../sheets/sheetsApi';
+import { readSheet, batchUpdateSheet, appendRows } from '../../sheets/sheetsApi';
 import { CATEGORY_MAP } from '../../domain/categories';
+import { getTransactionFingerprint, parseAnyDate, getMonthFromDate, getPayeeWords } from '../../domain/formatters';
 
 /* ================= TYPES ================= */
 
@@ -54,7 +55,22 @@ export function useTransactions() {
     ) => {
         const data = await readSheet(spreadsheetId, range, accessToken);
 
-        // Auto-default In/Calc (8) to 'Yes' if blank
+        // First pass: build a map of (Payee + InOut) -> Category for auto-tagging
+        // Row indices: 4 is Payee, 5 is In/Out, 6 is Category
+        const payeeMap: Record<string, string> = {};
+        data.forEach((r: string[], i: number) => {
+            if (i === 0) return;
+            const payee = r[4]?.trim().toLowerCase();
+            const inOut = r[5]?.trim();
+            const category = r[6]?.trim();
+
+            if (payee && inOut && category && category !== 'Select' && category !== '') {
+                const key = `${payee}|${inOut}`;
+                payeeMap[key] = category;
+            }
+        });
+
+        // Second pass: Process rows and apply auto-tagging
         const newPending: Record<string, PendingChange> = {};
         const attention = new Set<number>();
 
@@ -65,14 +81,25 @@ export function useTransactions() {
             const categoryEmpty = !copy[6] || copy[6] === 'Select' || copy[6] === '';
             const inCalcEmpty = !copy[8] || copy[8].trim() === '';
 
-            // If In/Calc (8) is blank, default to 'Yes'
-            if (inCalcEmpty) {
-                copy[8] = 'Yes';
-                newPending[`${i}-8`] = { rowIdx: i, colIdx: 8, value: 'Yes' };
+            // 1. Auto-tag Category if empty and we have a history for this payee
+            if (categoryEmpty) {
+                const payee = copy[4]?.trim().toLowerCase();
+                const inOut = copy[5]?.trim();
+                const key = `${payee}|${inOut}`;
+                const suggested = payeeMap[key];
+
+                if (suggested) {
+                    copy[6] = suggested;
+                    newPending[`${i}-6`] = { rowIdx: i, colIdx: 6, value: suggested };
+                }
+                // Still add to attention so user reviews it (it will show as "resolved" but dirty)
                 attention.add(i);
             }
 
-            if (categoryEmpty) {
+            // 2. Auto-default In/Calc (8) to 'Yes' if blank
+            if (inCalcEmpty) {
+                copy[8] = 'Yes';
+                newPending[`${i}-8`] = { rowIdx: i, colIdx: 8, value: 'Yes' };
                 attention.add(i);
             }
 
@@ -136,16 +163,12 @@ export function useTransactions() {
             const timeB = new Date(b.data[2]).getTime();
             return (isNaN(timeB) ? 0 : timeB) - (isNaN(timeA) ? 0 : timeA);
         });
-    }, [dataRows, filters, pendingChanges]);
+    }, [dataRows, filters, pendingChanges, attentionIndices]);
 
     const actionCount = useMemo(() => {
-        return dataRows.filter((r) => {
-            const row = r;
-            const categoryEmpty = !row[6] || row[6] === 'Select' || row[6] === '';
-            const inCalcEmpty = !row[8] || row[8].trim() === '';
-            return categoryEmpty || inCalcEmpty;
-        }).length;
-    }, [dataRows]);
+        return attentionIndices.size;
+    }, [attentionIndices]);
+
 
     /* ---------- cell update (local only) ---------- */
 
@@ -226,6 +249,89 @@ export function useTransactions() {
         }
     };
 
+    const importTransactions = async (newRows: string[][], bank: string, acc: string) => {
+        if (!creds) return;
+        setIsSyncing(true);
+        try {
+            // Fingerprint includes Bank + Acc for better uniqueness if applicable, 
+            // but the user wants deduplication against EXISTING rows.
+            // Existing rows already have bank/acc.
+            const existingFingerprints = new Set<string>();
+            dataRows.forEach(r => {
+                existingFingerprints.add(getTransactionFingerprint(r[2], r[7], r[4]));
+            });
+
+            const toImport: string[][] = [];
+            let duplicateCount = 0;
+
+            for (const row of newRows) {
+                // Pre-fill metadata
+                row[0] = bank;
+                row[1] = acc;
+
+                // Auto-Month from Date (row[2])
+                if (row[2]) {
+                    row[3] = getMonthFromDate(row[2]);
+                }
+
+                // Default In/Out to 'Out' if not provided (row[5])
+                if (!row[5]) {
+                    row[5] = 'Out';
+                }
+
+                // Default In Calc? to 'Yes' (row[8])
+                row[8] = 'Yes';
+
+                const fingerprint = getTransactionFingerprint(row[2], row[7], row[4]);
+                if (existingFingerprints.has(fingerprint)) {
+                    duplicateCount++;
+                    continue;
+                }
+
+                const fuzzyMatch = dataRows.find(r => {
+                    const dateMatch = parseAnyDate(r[2]) === parseAnyDate(row[2]);
+                    const amountMatch = Math.abs(parseFloat(r[7].replace(/[^\d.-]/g, ''))) === Math.abs(parseFloat(row[7].replace(/[^\d.-]/g, '')));
+
+                    if (dateMatch && amountMatch) {
+                        const newWords = getPayeeWords(row[4]);
+                        const existingWords = getPayeeWords(r[4]);
+                        const noteWords = getPayeeWords(r[9] || '');
+
+                        // Check if narrations share significant words
+                        const intersection = Array.from(newWords).filter(w => existingWords.has(w) || noteWords.has(w));
+
+                        // If they share at least 1 significant word (>2 chars) on same date/amount, it's a duplicate
+                        return intersection.length > 0;
+                    }
+                    return false;
+                });
+
+                if (fuzzyMatch) {
+                    duplicateCount++;
+                    continue;
+                }
+
+                // Ensure row has correct length (10 columns A-J)
+                const fullRow = new Array(10).fill('');
+                row.forEach((val, idx) => { if (idx < 10) fullRow[idx] = val; });
+                toImport.push(fullRow);
+            }
+
+            if (toImport.length > 0) {
+                await appendRows(creds.spreadsheetId, creds.range, toImport, creds.accessToken);
+                await loadTransactions(creds.spreadsheetId, creds.range, creds.accessToken);
+                alert(`Imported ${toImport.length} transactions. Skipped ${duplicateCount} duplicates.`);
+            } else {
+                alert(`No new transactions found. ${duplicateCount} duplicates skipped.`);
+            }
+        } catch (error) {
+            console.error('Import failed:', error);
+            alert('Failed to import transactions.');
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     return {
         headers,
         rows,
@@ -249,6 +355,7 @@ export function useTransactions() {
         },
         loadTransactions,
         actionCount,
+        importTransactions,
         isAttentionDone: (displayIdx: number) => {
             const row = filteredRows[displayIdx]?.data;
             if (!row) return false;

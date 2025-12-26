@@ -42,6 +42,6 @@ export const CATEGORY_MAP: Record<string, string[]> = {
     'To be updated': ['To be updated']
 };
 
-export const IN_OUT_OPTIONS = Object.keys(CATEGORY_MAP);
+export const IN_OUT_OPTIONS = ['In', 'Out', 'Savings', 'Settlement'];
 
 export const IN_CALC_OPTIONS = ['Yes', 'No'];

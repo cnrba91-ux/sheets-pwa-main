@@ -48,6 +48,34 @@ export async function appendRow(
 
     return res.json();
 }
+
+export async function appendRows(
+    spreadsheetId: string,
+    range: string,
+    rows: string[][],
+    accessToken: string
+) {
+    const res = await fetch(
+        `${SHEETS_API_BASE}/${spreadsheetId}/values/${range}:append?valueInputOption=USER_ENTERED`,
+        {
+            method: 'POST',
+            headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                values: rows
+            })
+        }
+    );
+
+    if (!res.ok) {
+        throw new Error('Failed to append rows');
+    }
+
+    return res.json();
+}
+
 export async function batchUpdateSheet(
     spreadsheetId: string,
     sheetName: string,
