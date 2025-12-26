@@ -1,4 +1,3 @@
-import { CATEGORY_MAP } from '../../domain/categories';
 import { formatDate, formatAmount } from '../../domain/formatters';
 import type { Filters } from './useTransactions';
 import { MatrixTable } from './MatrixTable.tsx';
@@ -13,7 +12,7 @@ type Props = {
     distinct: (key: number | 'month') => string[];
     updateCell: (rowIdx: number, colIdx: number, value: string) => void;
     isDirty: (rowIdx: number, colIdx: number) => boolean;
-    attentionCount: number;
+    categoryMap: Record<string, string[]>;
 };
 
 export function TransactionsPage({
@@ -24,7 +23,7 @@ export function TransactionsPage({
     distinct,
     updateCell,
     isDirty,
-    attentionCount
+    categoryMap
 }: Props) {
     return (
         <div className={styles.canvas}>
@@ -32,7 +31,6 @@ export function TransactionsPage({
                 filters={filters}
                 setFilters={setFilters}
                 distinct={distinct}
-                attentionCount={attentionCount}
             />
 
             <MatrixTable
@@ -40,7 +38,7 @@ export function TransactionsPage({
                 rows={rows}
                 updateCell={updateCell}
                 isDirty={isDirty}
-                categoryMap={CATEGORY_MAP}
+                categoryMap={categoryMap}
                 formatDate={formatDate}
                 formatAmount={formatAmount}
             />

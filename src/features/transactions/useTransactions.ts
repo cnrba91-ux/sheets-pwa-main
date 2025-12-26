@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { readSheet, batchUpdateSheet, appendRows } from '../../sheets/sheetsApi';
 import { getMonthYear, getTransactionFingerprint } from '../../domain/formatters';
 import { SCHEMA } from '../../domain/types';
-import type { Account } from '../../domain/types';
+import { CATEGORY_MAP, ACCOUNTS } from '../../domain/categories';
 
 /* ================= TYPES ================= */
 
@@ -34,7 +34,6 @@ type PendingChange = {
 
 export function useTransactions() {
     const [rows, setRows] = useState<string[][]>([]);
-    const [accounts, setAccounts] = useState<Account[]>([]);
     const [creds, setCreds] = useState<Credentials>(null);
     const [pendingChanges, setPendingChanges] = useState<Record<string, PendingChange>>({});
     const [isSyncing, setIsSyncing] = useState(false);
@@ -68,25 +67,6 @@ export function useTransactions() {
                 data = [headerRow];
             }
 
-            // Load Accounts from specialized "Accounts" sheet
-            try {
-                const accountsData = await readSheet(spreadsheetId, 'Accounts!A:B', accessToken);
-                const parsedAccounts: Account[] = accountsData
-                    .slice(1) // skip header
-                    .map((r: string[]) => ({
-                        bank: r[0] || '',
-                        accNum: r[1] || ''
-                    }))
-                    .filter((a: Account) => a.accNum);
-                setAccounts(parsedAccounts);
-            } catch (err) {
-                console.warn('Accounts sheet load failed:', err);
-                setAccounts([]);
-            }
-
-            // Index map for actual schema (13 columns):
-            // 0: Date, 1: Bank, 2: Account, 3: Ref ID, 4: Narration, 5: Payee, 6: Debit, 7: Credit, 8: Net Amount, 9: Flow, 10: Category, 11: ImpactsBudget, 12: Note
-
             // First pass: auto-tagging map (payee + flow -> category)
             const payeeMap: Record<string, string> = {};
             data.forEach((r: string[], i: number) => {
@@ -109,7 +89,7 @@ export function useTransactions() {
 
                 // Auto-fill Category based on previous history
                 const categoryEmpty = !copy[10] || copy[10] === 'Select' || copy[10] === '';
-                const impactsBudgetEmpty = !copy[11] || copy[11].trim() === '';
+                const excludeEmpty = !copy[11] || copy[11].trim() === '';
 
                 if (categoryEmpty) {
                     const payee = (copy[5] || '').trim().toLowerCase();
@@ -122,16 +102,15 @@ export function useTransactions() {
                     }
                 }
 
-                if (impactsBudgetEmpty) {
-                    copy[11] = 'Yes';
-                    newPending[`${i}-11`] = { rowIdx: i, colIdx: 11, value: 'Yes' };
+                if (excludeEmpty) {
+                    copy[11] = 'No';
+                    newPending[`${i}-11`] = { rowIdx: i, colIdx: 11, value: 'No' };
                 }
 
                 return copy;
             });
 
             setRows(processed);
-            setPendingChanges(prev => ({ ...prev, ...newPending }));
             setPendingChanges(prev => ({ ...prev, ...newPending }));
             setCreds({ spreadsheetId, range, accessToken });
         } catch (error) {
@@ -148,7 +127,7 @@ export function useTransactions() {
     /* ---------- slicer helpers ---------- */
 
     const distinctValues = useMemo(() => {
-        // Updated indices: 1: Bank, 2: Account, 9: Flow, 10: Category, 11: ImpactsBudget
+        // Updated indices: 1: Bank, 2: Account, 9: Flow, 10: Category, 11: Exclude
         const maps: Record<string, Set<string>> = {
             1: new Set(), 2: new Set(), 9: new Set(), 10: new Set(), 11: new Set(),
             month: new Set()
@@ -179,18 +158,20 @@ export function useTransactions() {
     const filteredRows = useMemo(() => {
         const augmented = dataRows.map((r, i) => ({ data: r, index: i + 1 }));
 
-        const filtered = augmented.filter(({ data: r }) => {
+        const filtered = augmented.filter(({ data: r, index: actualRowIdx }) => {
             const matchesBank = !filters.bank.length || filters.bank.includes(r[1] || '');
             const matchesAcc = !filters.account.length || filters.account.includes(r[2] || '');
             const matchesMonth = !filters.month.length || filters.month.includes(getMonthYear(r[0]));
             const matchesFlow = !filters.flow.length || filters.flow.includes(r[9] || '');
             const matchesCategory = !filters.category.length || filters.category.includes(r[10] || '');
-            const matchesCalc = !filters.calc.length || filters.calc.includes(r[11] || '');
+            const matchesExclude = !filters.calc.length || filters.calc.includes(r[11] || '');
 
             const needsAttention = !r[10] || r[10] === 'Select'; // Category empty
-            if (filters.attentionOnly && !needsAttention) return false;
+            const isDirty = !!pendingChanges[`${actualRowIdx}-10`]; // Locally modified category
 
-            return matchesBank && matchesAcc && matchesMonth && matchesFlow && matchesCategory && matchesCalc;
+            if (filters.attentionOnly && !needsAttention && !isDirty) return false;
+
+            return matchesBank && matchesAcc && matchesMonth && matchesFlow && matchesCategory && matchesExclude;
         });
 
         return filtered.sort((a, b) => {
@@ -225,6 +206,15 @@ export function useTransactions() {
             const sheetName = creds.range.split('!')[0];
             await batchUpdateSheet(creds.spreadsheetId, sheetName, Object.values(pendingChanges), creds.accessToken);
             setPendingChanges({});
+
+            // If we were in "New Entries" view and everything is tagged, go back to all transactions
+            if (filters.attentionOnly) {
+                const stillNeedsAttention = rows.slice(1).some(r => !r[10] || r[10] === 'Select');
+                if (!stillNeedsAttention) {
+                    setFilters(prev => ({ ...prev, attentionOnly: false }));
+                }
+            }
+
             alert('Changes saved!');
         } catch (error) {
             console.error('Save failed:', error);
@@ -296,7 +286,8 @@ export function useTransactions() {
         },
         loadTransactions,
         importTransactions,
-        accounts,
+        categoryMap: CATEGORY_MAP,
+        accounts: ACCOUNTS,
         attentionCount
     };
 }

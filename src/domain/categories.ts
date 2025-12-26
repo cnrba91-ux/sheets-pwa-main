@@ -38,10 +38,25 @@ export const CATEGORY_MAP: Record<string, string[]> = {
     Transfer: [
         'CC Repayment',
         'Self',
-        'S'
+        'S',
+        'Others'
     ]
 };
 
 export const FLOW_OPTIONS = ['In', 'Out', 'Savings', 'Transfer'];
 
 export const IMPACTS_BUDGET_OPTIONS = ['Yes', 'No'];
+
+export const ACCOUNTS = [
+    { bank: 'Axis', accNum: 'C-0002-Flipkart' },
+    { bank: 'Axis', accNum: 'C-2947-Airtel' },
+    { bank: 'Axis', accNum: 'C-6144-SuperM' },
+    { bank: 'HDFC', accNum: 'D-0902' },
+    { bank: 'HDFC', accNum: 'C-3295- IOC' },
+    { bank: 'HDFC', accNum: 'C-2786 - Neu' },
+    { bank: 'IDFC', accNum: 'D-5527' },
+    { bank: 'SBI', accNum: 'C-3808-Save' },
+    { bank: 'SBI', accNum: 'C-6887-Cashback' },
+    { bank: 'Yes Bank', accNum: 'C-1306-Kiwi' }
+];
+

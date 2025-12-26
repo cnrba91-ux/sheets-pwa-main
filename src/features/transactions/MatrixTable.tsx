@@ -12,7 +12,7 @@ type Props = {
     formatAmount: (v: string) => string;
 };
 
-const INITIAL_ROWS = 100;
+const INITIAL_ROWS = 200;
 const INCREMENT = 200;
 
 export function MatrixTable({
@@ -197,7 +197,7 @@ export function MatrixTable({
                                         <div
                                             className={styles.clickableText}
                                             onClick={() => updateCell(i, 11, row[11] === 'Yes' ? 'No' : 'Yes')}>
-                                            Budget: {row[11]}
+                                            Exclude: {row[11]}
                                         </div>
                                     </div>
                                 </div>

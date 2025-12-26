@@ -35,6 +35,7 @@ function App() {
     importTransactions,
     dataRows,
     accounts,
+    categoryMap,
     attentionCount
   } = useTransactions();
 
@@ -61,6 +62,20 @@ function App() {
         {token && (
           <div className={styles.actions}>
             <button
+              className={styles.refreshBtn}
+              onClick={() => loadTransactions(SPREADSHEET_ID, RANGE, token!)}
+              disabled={isSyncing}
+              title="Refresh data from Google Sheets"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M23 4v6h-6"></path>
+                <path d="M1 20v-6h6"></path>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Refresh
+            </button>
+
+            <button
               className={styles.importBtn}
               onClick={() => setIsImportOpen(true)}
               disabled={isSyncing}
@@ -75,17 +90,11 @@ function App() {
             </button>
 
             <button
-              className={styles.refreshBtn}
-              onClick={() => loadTransactions(SPREADSHEET_ID, RANGE, token!)}
+              className={`${styles.entriesBtn} ${filters.attentionOnly ? styles.entriesBtnActive : ''} ${attentionCount === 0 ? styles.entriesBtnZero : ''}`}
+              onClick={() => setFilters({ ...filters, attentionOnly: !filters.attentionOnly })}
               disabled={isSyncing}
-              title="Refresh data from Google Sheets"
             >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                <path d="M23 4v6h-6"></path>
-                <path d="M1 20v-6h6"></path>
-                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
-              </svg>
-              Refresh
+              <span>{attentionCount > 0 ? '⚠️' : '✅'} {attentionCount} New Entries</span>
             </button>
 
             {hasPendingChanges && (
@@ -128,7 +137,7 @@ function App() {
           distinct={distinct}
           updateCell={updateCell}
           isDirty={isDirty}
-          attentionCount={attentionCount}
+          categoryMap={categoryMap}
         />
       )}
 

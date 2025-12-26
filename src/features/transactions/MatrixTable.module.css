@@ -1,9 +1,11 @@
 /* Add these classes to the bottom or appropriate section of MatrixTable.module.css */
 
 .wrap {
-    padding: 0 2rem 2rem;
+    padding: 0 1.5rem 1.5rem;
     flex: 1;
     overflow: auto;
+    min-height: 0;
+    /* Essential for flex-shrink/overflow to work */
 }
 
 /* ================= DESKTOP TABLE ================= */
@@ -33,10 +35,10 @@
 }
 
 .th {
-    padding: 0.5rem 0.75rem;
+    padding: 0.4rem 0.6rem;
     text-align: left;
     font-weight: 600;
-    font-size: 0.7rem;
+    font-size: 0.65rem;
     color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -54,12 +56,57 @@
 }
 
 .td {
-    padding: 0.4rem 0.75rem;
-    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+    font-size: 0.80rem;
     color: #334155;
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
-    height: 38px;
+    height: 34px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Narration - allow to shrink */
+.td:nth-child(5),
+.th:nth-child(5) {
+    min-width: 100px;
+    max-width: 300px;
+}
+
+/* Payee - allow to shrink */
+.td:nth-child(6),
+.th:nth-child(6) {
+    min-width: 100px;
+    max-width: 120px;
+}
+
+/* Flow */
+.td:nth-child(10),
+.th:nth-child(10) {
+    min-width: 140px;
+    width: 140px;
+}
+
+/* Category */
+.td:nth-child(11),
+.th:nth-child(11) {
+    min-width: 160px;
+    width: 160px;
+}
+
+/* Exclude */
+.td:nth-child(12),
+.th:nth-child(12) {
+    min-width: 90px;
+    width: 90px;
+}
+
+/* Note */
+.td:nth-child(13),
+.th:nth-child(13) {
+    min-width: 160px;
+    width: 160px;
 }
 
 .td.dirty {
@@ -92,6 +139,7 @@
 .secondaryText {
     color: #94a3b8;
     font-size: 0.8rem;
+    white-space: nowrap;
 }
 
 /* ================= TEXT COLORS for FLOW ================= */
@@ -145,7 +193,7 @@
     border: 1px solid transparent;
     border-radius: 4px;
     background: transparent;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: inherit;
     cursor: pointer;
     padding: 0 0.5rem;

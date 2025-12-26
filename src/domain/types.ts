@@ -10,7 +10,7 @@ export interface Transaction {
     netAmount: number;    // Net amount
     flow: string;         // "In", "Out", "Savings", "Transfer"
     category: string;
-    impactsBudget: string; // "Yes" | "No"
+    exclude: string; // "Yes" | "No"
     note: string;
 }
 
@@ -37,7 +37,7 @@ export const SCHEMA = [
     'Net Amount',
     'Flow',
     'Category',
-    'ImpactsBudget',
+    'Exclude',
     'Note'
 ] as const;
 
@@ -56,7 +56,7 @@ export function rowToTransaction(row: string[]): Transaction {
         netAmount: parseFloat((row[8] || '0').replace(/[^\d.-]/g, '')) || 0,
         flow: row[9] || '',
         category: row[10] || '',
-        impactsBudget: row[11] || 'Yes',
+        exclude: row[11] || 'No',
         note: row[12] || '',
     };
 }
@@ -74,7 +74,7 @@ export function transactionToRow(t: Transaction): string[] {
         t.netAmount.toString(),
         t.flow,
         t.category,
-        t.impactsBudget,
+        t.exclude,
         t.note
     ];
 }
