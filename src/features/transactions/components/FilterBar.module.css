@@ -1,108 +1,147 @@
 .bar {
-    position: sticky;
-    top: 0;
-    z-index: 40;
-    /* Above table headers */
-    background-color: var(--color-surface);
-    border-bottom: 1px solid #eef2f6;
-    padding: 12px var(--space-xl);
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
+    background: transparent;
+    padding: 1rem 2rem;
+    margin: 0;
+    border-bottom: 1px solid var(--color-gray-200);
 }
-
 
 .filters {
     display: flex;
-    flex-wrap: wrap;
     align-items: center;
-    gap: 8px;
+    gap: 0.75rem;
+    flex-wrap: wrap;
 }
 
 .label {
-    font-size: 0.7rem;
     font-weight: 700;
-    text-transform: uppercase;
+    font-size: 0.75rem;
+    color: var(--color-gray-400);
     letter-spacing: 0.05em;
-    color: var(--color-text-tertiary);
-    margin-right: 8px;
+    margin-right: 0.5rem;
+}
+
+.clearBtn {
+    margin-left: auto;
+    background: transparent;
+    color: var(--color-danger);
+    border: 1px solid transparent;
+    padding: 0.4rem 0.8rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    transition: all 0.2s ease;
+}
+
+.clearBtn:hover {
+    background: #fef2f2;
+    border-color: #fee2e2;
 }
 
 .chips {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
 }
 
 .chip {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 2px 10px;
-    background-color: #f1f5f9;
-    color: #475569;
-    font-size: 0.75rem;
-    font-weight: 500;
-    border-radius: var(--radius-full);
-    border: 1px solid #e2e8f0;
+    gap: 0.5rem;
+    background: white;
+    color: var(--color-gray-700);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    border: 1px solid var(--color-gray-200);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
     transition: all 0.2s ease;
 }
 
 .chip:hover {
-    background-color: #e2e8f0;
+    border-color: var(--color-primary-light);
+    color: var(--color-primary);
 }
 
 .chipLabel {
-    opacity: 0.6;
-    font-weight: 400;
-    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--color-gray-500);
+    font-size: 0.75rem;
 }
 
 .chipRemove {
-    background: none;
+    background: transparent;
     border: none;
-    padding: 0;
+    color: var(--color-gray-400);
+    cursor: pointer;
+    padding: 2px;
     display: flex;
     align-items: center;
-    cursor: pointer;
-    color: inherit;
-    opacity: 0.5;
-    margin-left: 2px;
+    border-radius: 50%;
+    transition: all 0.2s;
 }
 
 .chipRemove:hover {
-    opacity: 1;
-    color: var(--color-danger);
+    background: #fee2e2;
+    color: #ef4444;
 }
 
-.emptyState {
-    font-size: var(--font-size-sm);
-    color: var(--color-text-muted);
-}
-
-.clearBtn {
-    background: none;
-    border: 1px solid #e2e8f0;
-    padding: 4px 12px;
-    border-radius: var(--radius-md);
-    font-size: 0.75rem;
+.attentionBtn {
+    background: #fffbeb;
+    color: #d97706;
+    border: 1px solid #fcd34d;
+    padding: 0.4rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
     font-weight: 600;
-    color: var(--color-danger);
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 0.5rem;
     transition: all 0.2s ease;
-    margin-left: 8px;
+    margin-right: auto;
+    /* Push to left if needed */
 }
 
-.clearBtn:hover {
-    background-color: #fee2e2;
-    border-color: #fecaca;
-    color: #b91c1c;
+.attentionBtn:hover {
+    background: #ffeaa7;
+    transform: translateY(-1px);
 }
 
-.clearBtn svg {
-    opacity: 0.8;
+.attentionBtnActive {
+    background: #f59e0b;
+    color: white;
+    border-color: #d97706;
+    box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+}
+
+.attentionBtnActive:hover {
+    background: #d97706;
+}
+
+@media (max-width: 768px) {
+    .bar {
+        padding: 1rem;
+    }
+
+    .filters {
+        gap: 0.5rem;
+    }
+
+    .label {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .clearBtn {
+        width: 100%;
+        justify-content: center;
+        background: #fff;
+        border-color: #fecaca;
+        margin-top: 0.5rem;
+    }
 }

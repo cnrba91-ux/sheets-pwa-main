@@ -33,24 +33,33 @@ export function formatAmount(value: string): string {
 export function parseAnyDate(val: string): string {
     if (!val) return '0000-00-00';
 
-    // Standard JS parsing first
-    let d = new Date(val);
-    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
-
-    // Try manual parsing for DD/MM/YY or DD/MM/YYYY
+    // Try manual parsing for DD/MM/YY or DD/MM/YYYY FIRST (Common in India/UK)
     const parts = val.split(/[/\-.]/);
     if (parts.length === 3) {
         const d1 = parseInt(parts[0]);
         const d2 = parseInt(parts[1]);
         const d3 = parseInt(parts[2]);
 
-        // Assume DD/MM/YY if d3 is small, or DD/MM/YYYY if d3 > 100
-        let year = d3;
-        if (year < 100) year += 2000;
+        if (!isNaN(d1) && !isNaN(d2) && !isNaN(d3)) {
+            // Assume DD/MM/YY if d3 is small, or DD/MM/YYYY if d3 > 100
+            let year = d3;
+            if (year < 100) year += 2000;
 
-        const date = new Date(year, d2 - 1, d1);
-        if (!isNaN(date.getTime())) return date.toISOString().split('T')[0];
+            // Basic validation to ensure it's likely a date
+            if (d2 >= 1 && d2 <= 12 && d1 >= 1 && d1 <= 31) {
+                const date = new Date(year, d2 - 1, d1);
+                // Adjust for local time zone offset to ensure ISO string is correct date
+                const offset = date.getTimezoneOffset() * 60000;
+                const localDate = new Date(date.getTime() - offset);
+                if (!isNaN(date.getTime())) return localDate.toISOString().split('T')[0];
+            }
+        }
     }
+
+    // Standard JS parsing fallback (e.g. for "10 Dec 2025" or ISO strings)
+    let d = new Date(val);
+    if (!isNaN(d.getTime())) return d.toISOString().split('T')[0];
+
     return '0000-00-00';
 }
 
@@ -104,11 +113,18 @@ export function getTransactionFingerprint(date: string, amount: string, payee: s
 }
 
 /**
- * Extracts month and year in MMM-YY format (e.g., Dec-25)
+ * Extracts month and year in MMM YYYY format (e.g., Dec 2025)
+ * Handles local date correctly to avoid timezone shifts.
  */
-export function getMonthFromDate(val: string): string {
-    const iso = parseAnyDate(val);
+export function getMonthYear(dateStr: string): string {
+    if (!dateStr) return '';
+    const iso = parseAnyDate(dateStr);
     if (iso === '0000-00-00') return '';
-    const date = new Date(iso);
-    return date.toLocaleDateString('en-IN', { month: 'short', year: '2-digit' }).replace(' ', '-');
+
+    // Create date from parts to treat it as local date (00:00:00 local)
+    // transforming "2025-12-01" to Dec 1st, 00:00 local time
+    const parts = iso.split('-');
+    const safeDate = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+
+    return safeDate.toLocaleString('en-US', { month: 'short', year: 'numeric' });
 }

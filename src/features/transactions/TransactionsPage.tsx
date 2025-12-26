@@ -10,10 +10,10 @@ type Props = {
     rows: string[][];
     filters: Filters;
     setFilters: (f: Filters) => void;
-    distinct: (idx: number) => string[];
+    distinct: (key: number | 'month') => string[];
     updateCell: (rowIdx: number, colIdx: number, value: string) => void;
     isDirty: (rowIdx: number, colIdx: number) => boolean;
-    isAttentionDone: (displayIdx: number) => boolean;
+    attentionCount: number;
 };
 
 export function TransactionsPage({
@@ -24,7 +24,7 @@ export function TransactionsPage({
     distinct,
     updateCell,
     isDirty,
-    isAttentionDone
+    attentionCount
 }: Props) {
     return (
         <div className={styles.canvas}>
@@ -32,6 +32,7 @@ export function TransactionsPage({
                 filters={filters}
                 setFilters={setFilters}
                 distinct={distinct}
+                attentionCount={attentionCount}
             />
 
             <MatrixTable
@@ -42,8 +43,6 @@ export function TransactionsPage({
                 categoryMap={CATEGORY_MAP}
                 formatDate={formatDate}
                 formatAmount={formatAmount}
-                attentionOnly={filters.attentionOnly}
-                isAttentionDone={isAttentionDone}
             />
         </div>
     );

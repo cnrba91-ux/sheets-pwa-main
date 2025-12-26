@@ -1,473 +1,328 @@
+/* Add these classes to the bottom or appropriate section of MatrixTable.module.css */
+
 .wrap {
+    padding: 0 2rem 2rem;
     flex: 1;
-    overflow-y: auto;
-    overflow-x: hidden;
-    background: var(--color-bg-primary);
-    padding: var(--space-md);
+    overflow: auto;
 }
 
-@media (min-width: 769px) {
-    .wrap {
-        padding: 0 var(--space-xl) var(--space-xl) var(--space-xl);
-    }
-}
-
+/* ================= DESKTOP TABLE ================= */
 .desktopOnly {
-    display: none;
-}
-
-@media (min-width: 769px) {
-    .desktopOnly {
-        display: block;
-    }
-}
-
-.mobileOnly {
     display: block;
 }
 
-@media (min-width: 769px) {
-    .mobileOnly {
-        display: none;
-    }
+.mobileOnly {
+    display: none;
 }
 
 .table {
     width: 100%;
+    border-collapse: separate;
     border-spacing: 0;
-    font-size: var(--font-size-sm);
-    table-layout: fixed;
-    background: var(--color-surface);
-    border-radius: var(--radius-lg);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+    background: white;
+    border-radius: 0;
+    box-shadow: none;
 }
 
-/* Card List Styles */
-.cardList {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-}
-
-.card {
-    background: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-md);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-md);
-    transition: all 0.2s ease;
-}
-
-.cardResolved {
-    background-color: #f0fdf4;
-    border-color: #dcfce7;
-    opacity: 0.7;
-}
-
-.cardHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.cardMainInfo {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
-}
-
-.cardPayee {
-    font-weight: 600;
-    color: var(--color-text-primary);
-    font-size: var(--font-size-base);
-}
-
-.cardSubInfo {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 0.75rem;
-    color: var(--color-text-tertiary);
-}
-
-.dot {
-    opacity: 0.5;
-}
-
-.cardAmount {
-    font-weight: 700;
-    font-size: 1.125rem;
-    font-family: 'Inter', sans-serif;
-}
-
-.cardActions {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-sm);
-}
-
-.fieldGroup {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-}
-
-.fieldLabel {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--color-text-tertiary);
-}
-
-.mobileSelectWrapper,
-.mobileInputWrapper {
-    position: relative;
-    border: 1px solid var(--color-border);
-    border-radius: var(--radius-md);
-    background: var(--color-bg-primary);
-    transition: all 0.2s ease;
-}
-
-.dirtyBorder {
-    border-color: var(--color-warning) !important;
-    box-shadow: 0 0 0 1px var(--color-warning);
-}
-
-.mobileSelect {
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    background: transparent;
-    font-size: var(--font-size-sm);
-    font-weight: 500;
-    color: var(--color-primary-dark);
-    -webkit-appearance: none;
-    appearance: none;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%236366f1' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M6 8l4 4 4-4'/%3E%3C/svg%3E");
-    background-position: right 0.75rem center;
-    background-repeat: no-repeat;
-    background-size: 1.25rem;
-}
-
-.mobileTextarea {
-    width: 100%;
-    padding: 10px 12px;
-    border: none;
-    background: transparent;
-    font-size: var(--font-size-sm);
-    min-height: 40px;
-    resize: none;
-}
-
-.cardFooter {
-    display: flex;
-    gap: var(--space-sm);
-    margin-top: 4px;
+.table thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #f8fafc;
+    box-shadow: 0 1px 0 #e2e8f0;
 }
 
 .th {
-    position: sticky;
-    top: 0;
-    z-index: 30;
-    background: linear-gradient(to bottom, #f9fafb 0%, #f3f6fa 100%);
-    padding: 12px 16px;
+    padding: 0.5rem 0.75rem;
+    text-align: left;
+    font-weight: 600;
     font-size: 0.7rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
     color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     border-bottom: 1px solid #e2e8f0;
     white-space: nowrap;
 }
 
-.th:not(:last-child) {
-    border-right: 1px solid rgba(226, 232, 240, 0.4);
-}
-
-.td {
-    padding: 8px 16px;
-    border-bottom: 1px solid var(--color-border-light);
-    color: var(--color-text-primary);
-    transition: background 0.1s ease;
-    font-size: 0.85rem;
-    vertical-align: middle;
-    overflow: hidden;
-    white-space: nowrap;
-}
-
-/* Secondary Information De-emphasis */
-.secondaryText {
-    color: var(--color-text-tertiary);
-    font-size: var(--font-size-xs);
-    font-weight: 400;
-}
-
-/* Specific Column Styles */
-/* 1. Bank, 2. Ac Num, 4. Month */
-.table td:nth-child(1),
-.table td:nth-child(2),
-.table td:nth-child(4) {
-    color: var(--color-text-tertiary);
-    font-size: 0.8rem;
-}
-
-/* 5. Payee (Emphasis) */
-.table td:nth-child(5) {
-    font-weight: 500;
-    color: var(--color-text-primary);
-}
-
-/* 3. Date */
-.dateCell {
-    color: var(--color-text-secondary);
-    font-size: 0.825rem;
-}
-
-/* 8. Amount (Emphasis) */
-.amountCell {
-    font-weight: 600;
-    font-family: 'Inter', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-variant-numeric: tabular-nums;
-    font-size: 0.9rem;
-    color: var(--color-text-primary);
-}
-
-.amountIn {
-    color: var(--color-success);
-}
-
-/* 10. Note */
-.table td:nth-child(10) {
-    opacity: 0.6;
-    font-size: 0.8rem;
-    transition: opacity 0.2s ease;
-}
-
-.table tr:hover td:nth-child(10) {
-    opacity: 1;
-}
-
-/* Status Pills */
-.pill {
-    display: inline-flex;
-    align-items: center;
-    padding: 2px 10px;
-    border-radius: var(--radius-full);
-    font-size: 0.7rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    user-select: none;
-}
-
-.clickablePill {
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.clickablePill:hover {
-    filter: brightness(0.95);
-    transform: translateY(-0.5px);
-}
-
-.pillIn {
-    background-color: #dcfce7;
-    color: #166534;
-}
-
-.pillOut {
-    background-color: #f1f5f9;
-    color: #475569;
-}
-
-.pillSavings {
-    background-color: #fef3c7;
-    color: #92400e;
-}
-
-.pillSettlement {
-    background-color: #fce7f3;
-    color: #9d174d;
-}
-
-.pillYes {
-    background-color: #dbeafe;
-    color: #1e40af;
-}
-
-.pillNo {
-    background-color: #f8fafc;
-    color: #94a3b8;
-}
-
-/* Ghost Menu Styling */
-.ghostWrapper {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-}
-
-.ghostSelect {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    z-index: 2;
-}
-
-.ghostLabel {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: var(--radius-sm);
-    transition: all 0.2s ease;
-    font-weight: 500;
-    color: #4f46e5;
-    /* Indigo for actions */
-    font-size: 0.85rem;
-}
-
-.ghostWrapper:hover .ghostLabel {
-    background: #f5f3ff;
-    color: #4338ca;
-}
-
-.ghostWrapper.showArrow::after {
-    content: '▾';
-    margin-left: 4px;
-    opacity: 0.4;
-    font-size: 0.7rem;
-}
-
-/* Column Width Definitions */
-.table th:nth-child(1),
-.table td:nth-child(1) {
-    width: 90px;
-}
-
-/* Bank */
-.table th:nth-child(2),
-.table td:nth-child(2) {
-    width: 90px;
-}
-
-/* Ac Num */
-.table th:nth-child(3),
-.table td:nth-child(3) {
-    width: 110px;
-}
-
-/* Date */
-.table th:nth-child(4),
-.table td:nth-child(4) {
-    width: 100px;
-}
-
-/* Month */
-.table th:nth-child(5),
-.table td:nth-child(5) {
-    width: auto;
-}
-
-/* Payee (Flex) */
-.table th:nth-child(6),
-.table td:nth-child(6) {
-    width: 70px;
-}
-
-/* In/Out */
-.table th:nth-child(7),
-.table td:nth-child(7) {
-    width: 180px;
-}
-
-/* Category */
-.table th:nth-child(8),
-.table td:nth-child(8) {
-    width: 90px;
-}
-
-/* Amount */
-.table th:nth-child(9),
-.table td:nth-child(9) {
-    width: 80px;
-}
-
-
-/* Zebra Striping & Hover */
-.table tbody tr:nth-child(even) {
-    background-color: #fafbfc;
+.table tbody tr {
+    background: white;
+    transition: background 0.15s ease;
 }
 
 .table tbody tr:hover {
-    background-color: #f8fafc;
+    background: #f8fafc;
 }
 
-/* Sticky/Persistent Row Fixes */
-.rowResolved {
-    background-color: #f0fdf4 !important;
-    /* light green */
-    opacity: 0.8;
-}
-
-.rowResolved:hover {
-    background-color: #dcfce7 !important;
-    opacity: 1;
+.td {
+    padding: 0.4rem 0.75rem;
+    font-size: 0.75rem;
+    color: #334155;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+    height: 38px;
 }
 
 .td.dirty {
-    position: relative;
+    background: #fffbeb !important;
+    box-shadow: inset 2px 0 0 #f59e0b;
 }
 
-.td.dirty::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    width: 3px;
-    background: var(--color-warning);
+/* ================= CELL TYPES ================= */
+.dateCell {
+    color: #64748b;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
-/* Note Input (Ghost Style) */
-.noteInput {
-    width: 100% !important;
-    font-size: 0.8rem !important;
-    border: 1px solid transparent !important;
-    background: transparent !important;
-    padding: 2px 4px !important;
-    color: inherit;
+.amountCell {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    font-family: 'Inter', sans-serif;
 }
 
-.noteInput:focus {
-    background: #fff !important;
-    border-color: var(--color-border) !important;
-    box-shadow: var(--shadow-sm) !important;
+.amountIn {
+    color: #10b981;
 }
 
-.loadMoreContainer {
-    padding: var(--space-xl);
-    display: flex;
-    justify-content: center;
+.amountOut {
+    color: #ef4444;
 }
 
-.loadMoreBtn {
-    background: #fff;
-    border: 1px solid var(--color-border);
-    padding: 8px 24px;
-    border-radius: var(--radius-full);
-    color: var(--color-text-secondary);
+.secondaryText {
+    color: #94a3b8;
     font-size: 0.8rem;
+}
+
+/* ================= TEXT COLORS for FLOW ================= */
+.textGreen {
+    color: #166534;
     font-weight: 600;
 }
 
-.loadMoreBtn:hover {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
+.textRed {
+    color: #991b1b;
+    font-weight: 600;
+}
+
+.textBlue {
+    color: #1e40af;
+    font-weight: 600;
+}
+
+.clickableText {
+    cursor: pointer;
+    font-size: 0.75rem;
+    color: #64748b;
+    transition: color 0.2s;
+    user-select: none;
+}
+
+.clickableText:hover {
+    color: #334155;
+    text-decoration: underline;
+}
+
+.table tbody tr.rowAttention {
+    background-color: #fff7ed;
+}
+
+.table tbody tr.rowAttention:hover {
+    background-color: #ffedd5;
+}
+
+/* ================= GHOST INPUTS ================= */
+.ghostWrapper {
+    position: relative;
+    height: 100%;
+    display: flex;
+    align-items: center;
+}
+
+.ghostSelect {
+    width: 100%;
+    height: 100%;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    font-size: 0.75rem;
+    color: inherit;
+    cursor: pointer;
+    padding: 0 0.5rem;
+    transition: all 0.2s;
+    /* Appearance fix for select arrow */
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 1rem;
+    padding-right: 2rem;
+}
+
+.ghostSelect:hover {
+    background-color: #f1f5f9;
+}
+
+.ghostSelect:focus {
+    background-color: white;
+    border-color: #6366f1;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.1);
+}
+
+.noteInput {
+    width: 100%;
+    height: 28px;
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 0.75rem;
+    padding: 0 0.5rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.noteInput:hover {
+    background: #f1f5f9;
+}
+
+.noteInput:focus {
+    background: white;
+    border-color: #6366f1;
+    outline: none;
+}
+
+/* ================= MOBILE ================= */
+.mobileOnly {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .desktopOnly {
+        display: none;
+    }
+
+    .mobileOnly {
+        display: block;
+    }
+
+    .wrap {
+        padding: 0 1rem 1rem;
+    }
+
+    .cardList {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .card {
+        background: white;
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 2rem;
+    }
+
+    .cardAttention {
+        background-color: #fffbeb !important;
+        border-left: 4px solid #f59e0b;
+    }
+
+    .cardHeader {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.75rem;
+    }
+
+    .cardMainInfo {
+        flex: 1;
+    }
+
+    .cardPayee {
+        font-weight: 600;
+        font-size: 0.95rem;
+        color: #0f172a;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .cardSubInfo {
+        font-size: 0.75rem;
+        color: #64748b;
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .cardAmount {
+        font-weight: 700;
+        font-size: 1.1rem;
+        color: #dc2626;
+    }
+
+    .cardActions {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+        border-top: 1px solid #f1f5f9;
+        padding-top: 0.75rem;
+    }
+
+    .fieldGroup {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .fieldLabel {
+        font-size: 0.7rem;
+        font-weight: 600;
+        color: #64748b;
+        text-transform: uppercase;
+    }
+
+    .mobileSelectWrapper,
+    .mobileInputWrapper {
+        width: 100%;
+    }
+
+    .mobileSelect {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+        font-size: 0.85rem;
+    }
+
+    .mobileTextarea {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        resize: none;
+        font-size: 0.85rem;
+    }
+
+    .cardFooter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.5rem;
+    }
+
+    .loadMoreContainer {
+        display: flex;
+        justify-content: center;
+        padding: 1rem;
+    }
+
+    .loadMoreBtn {
+        padding: 0.5rem 1rem;
+        background: #f1f5f9;
+        border-radius: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #475569;
+    }
 }

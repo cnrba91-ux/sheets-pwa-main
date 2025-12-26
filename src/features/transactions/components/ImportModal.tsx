@@ -1,231 +1,215 @@
 import { useState, useMemo } from 'react';
-import { getTransactionFingerprint, parseAnyDate, getPayeeWords, extractRefIds } from '../../../domain/formatters';
+import { BANK_TEMPLATES } from '../../../domain/parsers';
+import type { BankTemplate } from '../../../domain/parsers';
+import { transactionToRow } from '../../../domain/types';
+import type { Transaction, Account } from '../../../domain/types';
 import styles from './ImportModal.module.css';
 
 type Props = {
     isOpen: boolean;
     onClose: () => void;
-    onImport: (rows: string[][], bank: string, acc: string) => void;
-    headers: string[];
-    distinct: (idx: number) => string[];
+    onImport: (rows: string[][]) => void;
     dataRows: string[][];
+    accounts: Account[];
 };
 
-export function ImportModal({ isOpen, onClose, onImport, headers, distinct, dataRows }: Props) {
+export function ImportModal({ isOpen, onClose, onImport, dataRows, accounts }: Props) {
     const [pastedData, setPastedData] = useState('');
-    const [mapping, setMapping] = useState<Record<number, number>>({}); // colIdx in pasted -> colIdx in sheet
-    const [step, setStep] = useState<'paste' | 'map' | 'review'>('paste');
-    const [selectedBank, setSelectedBank] = useState('');
-    const [selectedAcc, setSelectedAcc] = useState('');
+    const [step, setStep] = useState<'input' | 'review'>('input');
+    const [detectedTemplate, setDetectedTemplate] = useState<BankTemplate | null>(null);
+    const [selectedBank, setSelectedBank] = useState<string>('');
+    const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
-    const parsedRows = useMemo(() => {
-        if (!pastedData.trim()) return [];
-        const lines = pastedData.trim().split('\n');
-        const dataLines = lines.slice(1);
-        if (dataLines.length === 0) return [];
-
-        const firstLine = dataLines[0];
-        const delimiter = firstLine.includes('\t') ? '\t' : (firstLine.includes(',') ? ',' : '\t');
-
-        return dataLines.map(line => line.split(delimiter).map(cell => cell.trim()));
-    }, [pastedData]);
+    // Derived lists
+    const uniqueBanks = useMemo(() => Array.from(new Set(accounts.map(a => a.bank))), [accounts]);
+    const filteredAccounts = useMemo(() => accounts.filter(a => a.bank === selectedBank), [accounts, selectedBank]);
 
     const handlePaste = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         setPastedData(e.target.value);
-        if (e.target.value.trim()) {
-            setStep('map');
+        setError(null);
+    };
+
+
+
+    const analyzeData = () => {
+        if (!selectedAccount) {
+            setError('Please select an account.');
+            return;
+        }
+        if (!pastedData.trim()) {
+            setError('Please paste some data.');
+            return;
+        }
+
+        // Try to auto-detect
+        const template = BANK_TEMPLATES.find(t => t.detect(pastedData));
+        if (template) {
+            setDetectedTemplate(template);
+            setStep('review');
+        } else {
+            setError('Could not identify the bank format from the text. Please ensure it matches supported formats (HDFC, Axis, IDFC).');
         }
     };
 
+    const importItems = useMemo(() => {
+        if (!detectedTemplate || !pastedData.trim() || !selectedAccount) return [];
+
+        try {
+            return detectedTemplate.parse(pastedData, selectedAccount.bank, selectedAccount.accNum);
+        } catch (e) {
+            console.error(e);
+            return [];
+        }
+    }, [detectedTemplate, pastedData, selectedAccount]);
+
+    const analysis = useMemo(() => {
+        if (step !== 'review') return { newItems: [], duplicates: [] };
+
+        const existingRefs = new Set(dataRows.map(r => r[3]).filter(id => id));
+        const newItems: Transaction[] = [];
+        const duplicates: { t: Transaction; reason: string }[] = [];
+
+        importItems.forEach(t => {
+            if (t.refId && existingRefs.has(t.refId)) {
+                duplicates.push({ t, reason: 'Duplicate Ref ID' });
+            } else {
+                const isDup = dataRows.some(r =>
+                    r[0] === t.date &&
+                    Math.abs(parseFloat(r[8] || '0')) === Math.abs(t.netAmount) &&
+                    (r[5] || '').toLowerCase().includes((t.payee || '').toLowerCase().split(' ')[0])
+                );
+
+                if (isDup && !t.refId) {
+                    duplicates.push({ t, reason: 'Similar transaction exists' });
+                } else {
+                    newItems.push(t);
+                }
+            }
+        });
+
+        return { newItems, duplicates };
+    }, [step, importItems, dataRows]);
+
     const handleImport = () => {
-        onImport(analysis.newToImport, selectedBank, selectedAcc);
+        const rows = analysis.newItems.map(item => transactionToRow(item));
+        onImport(rows);
         reset();
     };
 
-    const analysis = useMemo(() => {
-        if (step !== 'review') return { newToImport: [], duplicates: [], total: 0 };
-
-        const mapped = parsedRows.map(pRow => {
-            const sheetRow = new Array(headers.length).fill('');
-            Object.entries(mapping).forEach(([pIdx, sIdx]) => {
-                sheetRow[sIdx] = pRow[parseInt(pIdx)] || '';
-            });
-            return sheetRow;
-        });
-
-        // Index existing Reference IDs from NOTES (Column J / index 9)
-        const refIdMap = new Map<string, string[]>(); // refId -> [date|amount]
-        dataRows.forEach(r => {
-            const ids = extractRefIds(r[9] || '');
-            const date = parseAnyDate(r[2]);
-            const amount = Math.abs(parseFloat(r[7].replace(/[^\d.-]/g, '')) || 0).toFixed(0);
-            ids.forEach(id => {
-                if (!refIdMap.has(id)) refIdMap.set(id, []);
-                refIdMap.get(id)!.push(`${date}|${amount}`);
-            });
-        });
-
-        const existingFingerprints = new Set(dataRows.map(r => getTransactionFingerprint(r[2], r[7], r[4])));
-
-        const newToImport: string[][] = [];
-        const duplicates: { row: string[]; reason: string }[] = [];
-
-        mapped.forEach(row => {
-            const date = parseAnyDate(row[2]);
-            const amount = Math.abs(parseFloat(row[7].replace(/[^\d.-]/g, '')) || 0).toFixed(0);
-
-            // 1. Check Exact Fingerprint (Date + Amount + Normalized Payee)
-            const fingerprint = getTransactionFingerprint(row[2], row[7], row[4]);
-            if (existingFingerprints.has(fingerprint)) {
-                duplicates.push({ row, reason: 'Exact match' });
-                return;
-            }
-
-            // 2. Check Ref IDs from Current Row (Statement Narration) vs Index (Email Note)
-            const currentRowIds = extractRefIds(row[4] || '');
-            let foundRefMatch = false;
-            for (const id of currentRowIds) {
-                const matches = refIdMap.get(id);
-                if (matches) {
-                    // Check if date and amount also match for security
-                    const isFullMatch = matches.includes(`${date}|${amount}`);
-                    if (isFullMatch) {
-                        foundRefMatch = true;
-                        break;
-                    }
-                }
-            }
-
-            if (foundRefMatch) {
-                duplicates.push({ row, reason: 'Reference match (from Note)' });
-                return;
-            }
-
-            // 3. Fallback word match - check if Narration words exist in existing email Notes
-            const fuzzyMatch = dataRows.find(r => {
-                const dMatch = parseAnyDate(r[2]) === date;
-                const aMatch = Math.abs(parseFloat(r[7].replace(/[^\d.-]/g, '')) || 0).toFixed(0) === amount;
-                if (dMatch && aMatch) {
-                    const newW = getPayeeWords(row[4]);
-                    const noteW = getPayeeWords(r[9] || '');
-                    // Does the note contain significantly similar payee info?
-                    return Array.from(newW).some(w => noteW.has(w));
-                }
-                return false;
-            });
-
-            if (fuzzyMatch) {
-                duplicates.push({ row, reason: 'Possible match' });
-            } else {
-                newToImport.push(row);
-            }
-        });
-
-        return { newToImport, duplicates, total: parsedRows.length };
-    }, [step, parsedRows, mapping, dataRows, headers]);
-
     const reset = () => {
         setPastedData('');
-        setMapping({});
-        setStep('paste');
+        setStep('input');
+        setDetectedTemplate(null);
+        setSelectedBank('');
+        setSelectedAccount(null);
+        setError(null);
         onClose();
     };
 
     if (!isOpen) return null;
 
-    const previewRow = parsedRows[0] || [];
-
     return (
-        <div className={styles.overlay} onClick={reset}>
+        <div className={styles.overlay}>
             <div className={styles.modal} onClick={e => e.stopPropagation()}>
+                {/* HEADER */}
                 <header className={styles.header}>
-                    <h3>Import Transactions</h3>
+                    <div className={styles.titleGroup}>
+                        <h3>Import Wizard</h3>
+                        {detectedTemplate && step === 'review' && (
+                            <span className={styles.templateTag}>
+                                {detectedTemplate.name} Detected
+                            </span>
+                        )}
+                    </div>
                     <button className={styles.closeBtn} onClick={reset}>&times;</button>
                 </header>
 
                 <div className={styles.body}>
+                    {/* STEPPER */}
                     <div className={styles.steps}>
-                        <div className={`${styles.step} ${step === 'paste' ? styles.activeStep : ''}`}>1. Paste</div>
-                        <div className={`${styles.step} ${step === 'map' ? styles.activeStep : ''}`}>2. Map</div>
-                        <div className={`${styles.step} ${step === 'review' ? styles.activeStep : ''}`}>3. Review</div>
+                        <div className={`${styles.step} ${step === 'input' ? styles.activeStep : ''}`}>
+                            <div className={styles.stepNum}>1</div>
+                            <span>Import Details</span>
+                        </div>
+                        <div className={`${styles.step} ${step === 'review' ? styles.activeStep : ''}`}>
+                            <div className={styles.stepNum}>2</div>
+                            <span>Review & Import</span>
+                        </div>
                     </div>
 
-                    {step === 'paste' && (
+                    {/* STEP 1: INPUT (Select + Paste) */}
+                    {step === 'input' && (
                         <div className={styles.stepContainer}>
+                            {/* Account Selectors - Pills */}
+                            <div className={styles.selectionRow}>
+                                <div>
+                                    <label className={styles.fieldLabel}>Bank</label>
+                                    <div className={styles.pillContainer}>
+                                        {uniqueBanks.map(b => (
+                                            <button
+                                                key={b}
+                                                className={`${styles.pill} ${selectedBank === b ? styles.pillActive : ''}`}
+                                                onClick={() => {
+                                                    setSelectedBank(b);
+                                                    setSelectedAccount(null);
+                                                    setError(null);
+                                                }}
+                                            >
+                                                {b}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className={styles.fieldLabel}>Account</label>
+                                    <div className={styles.pillContainer}>
+                                        {!selectedBank && (
+                                            <span style={{ fontSize: '0.9rem', color: '#9ca3af', fontStyle: 'italic', padding: '0.25rem 0' }}>Select a bank first</span>
+                                        )}
+                                        {selectedBank && filteredAccounts.map(a => (
+                                            <button
+                                                key={a.accNum}
+                                                className={`${styles.pill} ${selectedAccount?.accNum === a.accNum ? styles.pillActive : ''}`}
+                                                onClick={() => {
+                                                    setSelectedAccount(a);
+                                                    setError(null);
+                                                }}
+                                            >
+                                                {a.accNum}
+                                            </button>
+                                        ))}
+                                        {selectedBank && filteredAccounts.length === 0 && (
+                                            <span style={{ fontSize: '0.9rem', color: '#ef4444' }}>No accounts found for {selectedBank}</span>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+
                             <p className={styles.instruction}>
-                                Paste rows from Excel, CSV, or your bank portal below.
+                                Paste your Bank Statement text below.
                             </p>
                             <textarea
                                 className={styles.textarea}
-                                placeholder="Date	Payee	Amount..."
+                                placeholder="Paste copied data from your PDF or Excel statement here..."
                                 value={pastedData}
                                 onChange={handlePaste}
-                                autoFocus
                             />
+                            {error && <div style={{ color: '#ef4444', marginTop: '0.5rem', fontSize: '0.9rem' }}>{error}</div>}
                         </div>
                     )}
 
-                    {step === 'map' && (
-                        <div className={styles.stepContainer}>
-                            <div className={styles.metaSelectors}>
-                                <div className={styles.metaRow}>
-                                    <label className={styles.metaLabel}>Select Bank</label>
-                                    <select
-                                        className={styles.select}
-                                        value={selectedBank}
-                                        onChange={e => setSelectedBank(e.target.value)}
-                                    >
-                                        <option value="">-- Select Bank --</option>
-                                        {distinct(0).map(b => <option key={b} value={b}>{b}</option>)}
-                                    </select>
-                                </div>
-                                <div className={styles.metaRow}>
-                                    <label className={styles.metaLabel}>Select Account</label>
-                                    <select
-                                        className={styles.select}
-                                        value={selectedAcc}
-                                        onChange={e => setSelectedAcc(e.target.value)}
-                                    >
-                                        <option value="">-- Select Account --</option>
-                                        {distinct(1).map(a => <option key={a} value={a}>{a}</option>)}
-                                    </select>
-                                </div>
-                            </div>
-
-                            <p className={styles.instruction} style={{ marginTop: '1.5rem' }}>
-                                Map your columns to the Sheet fields. (Header row skipped)
-                            </p>
-                            <div className={styles.mapperGrid}>
-                                {previewRow.map((cell, pIdx) => (
-                                    <div key={pIdx} className={styles.mapperCol}>
-                                        <div className={styles.previewCell} title={cell}>
-                                            {cell || <span className={styles.empty}>Empty</span>}
-                                        </div>
-                                        <select
-                                            className={styles.select}
-                                            value={mapping[pIdx] ?? ''}
-                                            onChange={e => setMapping({ ...mapping, [pIdx]: parseInt(e.target.value) })}
-                                        >
-                                            <option value="">Skip Column</option>
-                                            {headers.map((h, sIdx) => (
-                                                <option key={sIdx} value={sIdx}>{h}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
+                    {/* STEP 2: REVIEW */}
                     {step === 'review' && (
                         <div className={styles.analysis}>
                             <div className={styles.statsGrid}>
                                 <div className={styles.statCard}>
-                                    <span className={styles.statValue}>{analysis.total}</span>
-                                    <span className={styles.statLabel}>Total Rows</span>
+                                    <span className={styles.statValue}>{importItems.length}</span>
+                                    <span className={styles.statLabel}>Found</span>
                                 </div>
                                 <div className={styles.statCard}>
-                                    <span className={`${styles.statValue} ${styles.statusNew}`}>{analysis.newToImport.length}</span>
+                                    <span className={`${styles.statValue} ${styles.statusNew}`}>{analysis.newItems.length}</span>
                                     <span className={styles.statLabel}>To Import</span>
                                 </div>
                                 <div className={styles.statCard}>
@@ -235,22 +219,42 @@ export function ImportModal({ isOpen, onClose, onImport, headers, distinct, data
                             </div>
 
                             <div className={styles.previewList}>
-                                {analysis.newToImport.map((row, i) => (
+                                {analysis.newItems.length === 0 && analysis.duplicates.length === 0 && (
+                                    <div className={styles.emptyState}>
+                                        <div className={styles.emptyIcon}>🔍</div>
+                                        <p>No valid transactions found to import.</p>
+                                    </div>
+                                )}
+
+                                {analysis.newItems.map((t, i) => (
                                     <div key={`new-${i}`} className={styles.previewItem}>
                                         <div className={styles.previewMain}>
-                                            <span className={styles.previewPayee}>{row[4]}</span>
-                                            <span className={styles.previewMeta}>{row[2]} • {row[7]}</span>
+                                            <span className={styles.previewPayee}>{t.payee || t.narration}</span>
+                                            <span className={styles.previewMeta}>
+                                                {t.date} • {t.flow} • <span style={{ fontFamily: 'monospace' }}>{t.refId || 'No Ref'}</span>
+                                            </span>
                                         </div>
-                                        <span className={`${styles.statusPill} ${styles.statusNew}`}>New</span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontWeight: 800, color: t.netAmount > 0 ? '#10b981' : '#ef4444' }}>
+                                                {t.netAmount > 0 ? '+' : ''}{t.netAmount}
+                                            </div>
+                                            <span className={`${styles.statusPill} ${styles.new}`}>New</span>
+                                        </div>
                                     </div>
                                 ))}
+
                                 {analysis.duplicates.map((item, i) => (
-                                    <div key={`dup-${i}`} className={styles.previewItem} style={{ opacity: 0.6 }}>
+                                    <div key={`dup-${i}`} className={styles.previewItem} style={{ opacity: 0.6, background: '#f8fafc' }}>
                                         <div className={styles.previewMain}>
-                                            <span className={styles.previewPayee}>{item.row[4]}</span>
-                                            <span className={styles.previewMeta}>{item.row[2]} • {item.row[7]}</span>
+                                            <span className={styles.previewPayee}>{item.t.payee || item.t.narration}</span>
+                                            <span className={styles.previewMeta}>{item.t.date} • {item.reason}</span>
                                         </div>
-                                        <span className={`${styles.statusPill} ${styles.statusDup}`}>{item.reason}</span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontWeight: 800, color: '#9ca3af' }}>
+                                                {item.t.netAmount}
+                                            </div>
+                                            <span className={`${styles.statusPill} ${styles.dup}`}>Duplicate</span>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -258,35 +262,33 @@ export function ImportModal({ isOpen, onClose, onImport, headers, distinct, data
                     )}
                 </div>
 
+                {/* FOOTER */}
                 <footer className={styles.footer}>
-                    {step === 'map' && (
-                        <button className={styles.secondary} onClick={() => setStep('paste')}>
-                            Back
-                        </button>
+                    {/* Secondary Button */}
+                    {step === 'input' && (
+                        <button className={styles.secondary} onClick={onClose}>Cancel</button>
                     )}
                     {step === 'review' && (
-                        <button className={styles.secondary} onClick={() => setStep('map')}>
-                            Back
-                        </button>
+                        <button className={styles.secondary} onClick={() => setStep('input')}>Back</button>
                     )}
 
-                    {step === 'map' && (
+                    {/* Primary Button */}
+                    {step === 'input' && (
                         <button
                             className={styles.primary}
-                            disabled={!selectedBank || !selectedAcc || Object.keys(mapping).length === 0}
-                            onClick={() => setStep('review')}
+                            onClick={analyzeData}
                         >
-                            Analyze Data
+                            Analyze & Review
                         </button>
                     )}
 
                     {step === 'review' && (
                         <button
                             className={styles.primary}
-                            disabled={analysis.newToImport.length === 0}
+                            disabled={analysis.newItems.length === 0}
                             onClick={handleImport}
                         >
-                            Import {analysis.newToImport.length} Transactions
+                            Import {analysis.newItems.length} Transactions
                         </button>
                     )}
                 </footer>

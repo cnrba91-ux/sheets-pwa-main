@@ -5,12 +5,17 @@ import styles from './FilterBar.module.css';
 type Props = {
     filters: Filters;
     setFilters: (f: Filters) => void;
-    distinct: (idx: number) => string[];
+    distinct: (key: number | 'month') => string[];
+    attentionCount: number;
 };
 
-export function FilterBar({ filters, setFilters, distinct }: Props) {
+export function FilterBar({ filters, setFilters, distinct, attentionCount }: Props) {
     const updateFilter = (key: keyof Filters, value: string[]) => {
         setFilters({ ...filters, [key]: value });
+    };
+
+    const toggleAttention = () => {
+        setFilters({ ...filters, attentionOnly: !filters.attentionOnly });
     };
 
     const removeFilterItem = (key: keyof Filters, value: string) => {
@@ -23,45 +28,56 @@ export function FilterBar({ filters, setFilters, distinct }: Props) {
         }
     };
 
-    const hasActiveFilters = Object.values(filters).some(val => Array.isArray(val) && val.length > 0);
+    const hasActiveFilters = Object.values(filters).some(val => Array.isArray(val) && val.length > 0) || filters.attentionOnly;
 
     return (
         <div className={styles.bar}>
             <div className={styles.filters}>
-                <span className={styles.label}>Filters</span>
+                {attentionCount > 0 && (
+                    <button
+                        className={`${styles.attentionBtn} ${filters.attentionOnly ? styles.attentionBtnActive : ''}`}
+                        onClick={toggleAttention}
+                    >
+                        <span>⚠️ {attentionCount} Action Required</span>
+                    </button>
+                )}
+
+                <div className={styles.divider} style={{ width: 1, height: 24, background: '#e5e7eb', margin: '0 0.5rem' }}></div>
+
+                <span className={styles.label}>FILTERS</span>
                 <MultiSelect
                     label="Bank"
-                    options={distinct(0)}
+                    options={distinct(1)}
                     selected={filters.bank}
                     onChange={(v) => updateFilter('bank', v)}
                 />
                 <MultiSelect
                     label="Account"
-                    options={distinct(1)}
-                    selected={filters.acc}
-                    onChange={(v) => updateFilter('acc', v)}
+                    options={distinct(2)}
+                    selected={filters.account}
+                    onChange={(v) => updateFilter('account', v)}
                 />
                 <MultiSelect
                     label="Month"
-                    options={distinct(3)}
+                    options={distinct('month')}
                     selected={filters.month}
                     onChange={(v) => updateFilter('month', v)}
                 />
                 <MultiSelect
-                    label="In/Out"
-                    options={distinct(5)}
-                    selected={filters.inout}
-                    onChange={(v) => updateFilter('inout', v)}
+                    label="Flow"
+                    options={distinct(9)}
+                    selected={filters.flow}
+                    onChange={(v) => updateFilter('flow', v)}
                 />
                 <MultiSelect
                     label="Category"
-                    options={distinct(6)}
+                    options={distinct(10)}
                     selected={filters.category}
                     onChange={(v) => updateFilter('category', v)}
                 />
                 <MultiSelect
-                    label="In Calc?"
-                    options={distinct(8)}
+                    label="Impacts Budget?"
+                    options={distinct(11)}
                     selected={filters.calc}
                     onChange={(v) => updateFilter('calc', v)}
                 />
@@ -71,12 +87,12 @@ export function FilterBar({ filters, setFilters, distinct }: Props) {
                         className={styles.clearBtn}
                         onClick={() => setFilters({
                             bank: [],
-                            acc: [],
+                            account: [],
                             month: [],
-                            inout: [],
+                            flow: [],
                             category: [],
                             calc: [],
-                            attentionOnly: filters.attentionOnly
+                            attentionOnly: false
                         })}
                     >
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
@@ -90,14 +106,25 @@ export function FilterBar({ filters, setFilters, distinct }: Props) {
 
             {hasActiveFilters && (
                 <div className={styles.chips}>
+                    {filters.attentionOnly && (
+                        <span className={styles.chip} style={{ background: '#fffbeb', color: '#d97706', borderColor: '#fcd34d' }}>
+                            <span className={styles.chipLabel}>Filter:</span>
+                            Action Required
+                            <button className={styles.chipRemove} onClick={toggleAttention}>
+                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </span>
+                    )}
                     {Object.entries(filters).map(([key, values]) => {
                         if (!Array.isArray(values)) return null;
                         return values.map(val => (
                             <span key={`${key}-${val}`} className={styles.chip}>
                                 <span className={styles.chipLabel}>
-                                    {key === 'acc' ? 'Account' :
-                                        key === 'calc' ? 'Calc' :
-                                            key.charAt(0).toUpperCase() + key.slice(1)}:
+                                    {key === 'calc' ? 'Calc' :
+                                        key.charAt(0).toUpperCase() + key.slice(1)}:
                                 </span>
                                 {val || '(Empty)'}
                                 <button

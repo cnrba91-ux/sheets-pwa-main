@@ -1,0 +1,7 @@
+﻿src/features/transactions/components/ImportModal.tsx(18,58): error TS6133: 'distinct' is declared but its value is never read.
+src/features/transactions/SlicersPanel.tsx(20,76): error TS2339: Property 'acc' does not exist on type 'Filters'.
+src/features/transactions/SlicersPanel.tsx(21,57): error TS2353: Object literal may only specify known properties, and 'acc' does not exist in type 'Filters'.
+src/features/transactions/SlicersPanel.tsx(23,74): error TS2339: Property 'month' does not exist on type 'Filters'.
+src/features/transactions/SlicersPanel.tsx(24,57): error TS2353: Object literal may only specify known properties, and 'month' does not exist in type 'Filters'.
+src/features/transactions/SlicersPanel.tsx(26,77): error TS2339: Property 'inout' does not exist on type 'Filters'.
+src/features/transactions/SlicersPanel.tsx(27,57): error TS2353: Object literal may only specify known properties, and 'inout' does not exist in type 'Filters'.

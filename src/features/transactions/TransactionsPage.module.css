@@ -1,7 +1,112 @@
-.canvas {
+.page {
     display: flex;
     flex-direction: column;
+    height: calc(100vh - 76px);
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+    overflow: hidden;
+}
+
+.content {
     flex: 1;
-    background-color: var(--color-bg-primary);
-    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+    scroll-behavior: smooth;
+}
+
+/* Custom Scrollbar */
+.content::-webkit-scrollbar {
+    width: 10px;
+}
+
+.content::-webkit-scrollbar-track {
+    background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.content::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #6366f1 0%, #4f46e5 100%);
+    border-radius: 10px;
+    border: 2px solid #f3f4f6;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #4f46e5 0%, #4338ca 100%);
+}
+
+/* Loading State */
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.loadingSpinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(99, 102, 241, 0.1);
+    border-top-color: #6366f1;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loadingText {
+    color: #6b7280;
+    font-size: 0.95rem;
+    font-weight: 500;
+}
+
+/* Empty State */
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 60vh;
+    gap: 1.5rem;
+    padding: 2rem;
+}
+
+.emptyIcon {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6366f1;
+    font-size: 2.5rem;
+}
+
+.emptyTitle {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #111827;
+    margin-bottom: 0.5rem;
+}
+
+.emptySubtitle {
+    font-size: 1rem;
+    color: #6b7280;
+    text-align: center;
+    max-width: 400px;
+}
+
+@media (max-width: 768px) {
+    .page {
+        height: calc(100vh - 140px);
+    }
+
+    .content {
+        padding-bottom: 80px;
+    }
 }

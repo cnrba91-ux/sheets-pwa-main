@@ -2,46 +2,46 @@
 
 export const CATEGORY_MAP: Record<string, string[]> = {
     In: [
-        'Income',
-        'Salary',
-        'DN',
-        'Dividend',
-        'UPI Received',
-        'Savings Interest',
         'Cashback',
-        'Return'
+        'Dividend',
+        'DN',
+        'Income',
+        'Return',
+        'Salary',
+        'Savings Interest'
     ],
 
     Out: [
-        'Groceries',
-        'Food & Dining',
         'Bike Expenses',
-        'Travel',
-        'Personal Expense',
-        'Health & Insurance',
+        'Bills & Recharge',
         'Car Expenses',
         'Car Loan',
+        'DN',
+        'Food & Dining',
+        'Groceries',
+        'Health & Insurance',
         'Home Loan',
         'Home Maintenance',
-        'Bills & Recharge',
+        'Misc',
+        'Personal Expense',
         'Shopping',
-        'DN',
-        'Misc'
+        'Travel'
     ],
-
-    Settlement: ['CC Repayment'],
 
     Savings: [
         'Chits',
-        'Stocks',
         'Lent',
         'Mutual Funds',
-        'Metal'
+        'Stocks'
     ],
 
-    'To be updated': ['To be updated']
+    Transfer: [
+        'CC Repayment',
+        'Self',
+        'S'
+    ]
 };
 
-export const IN_OUT_OPTIONS = ['In', 'Out', 'Savings', 'Settlement'];
+export const FLOW_OPTIONS = ['In', 'Out', 'Savings', 'Transfer'];
 
-export const IN_CALC_OPTIONS = ['Yes', 'No'];
+export const IMPACTS_BUDGET_OPTIONS = ['Yes', 'No'];
