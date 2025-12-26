@@ -65,7 +65,7 @@ export const BANK_TEMPLATES: BankTemplate[] = [
                     netAmount,
                     flow,
                     category: '',
-                    impactsBudget: 'Yes',
+                    exclude: 'No',
                     note: ''
                 };
             });
@@ -101,7 +101,7 @@ export const BANK_TEMPLATES: BankTemplate[] = [
                     netAmount: isCredit ? amount : -amount,
                     flow,
                     category: '',
-                    impactsBudget: 'Yes',
+                    exclude: 'No',
                     note: ''
                 };
             });
@@ -137,7 +137,7 @@ export const BANK_TEMPLATES: BankTemplate[] = [
                     netAmount,
                     flow,
                     category: '',
-                    impactsBudget: 'Yes',
+                    exclude: 'No',
                     note: ''
                 };
             });
