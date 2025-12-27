@@ -16,16 +16,34 @@ export function formatDate(value: string): string {
     });
 }
 
-export function formatAmount(value: string): string {
-    const raw = value.replace(/[^\d.-]/g, '');
-    const num = Number(raw);
+export function formatAmount(value: string | number): string {
+    const num = typeof value === 'number' ? value : Number(value.replace(/[^\d.-]/g, ''));
 
     if (isNaN(num)) {
-        return value;
+        return String(value);
     }
 
     const rounded = Math.round(num);
     return `₹ ${rounded.toLocaleString('en-IN')}`;
+}
+
+/**
+ * Formats numbers in Indian compact notation (L for Lakhs, k for thousands)
+ */
+export function formatCompactAmount(value: string | number): string {
+    const num = typeof value === 'number' ? value : Number(value.replace(/[^\d.-]/g, ''));
+    if (isNaN(num)) return String(value);
+
+    const absNum = Math.abs(num);
+    const sign = num < 0 ? '-' : '';
+
+    if (absNum >= 100000) {
+        return `${sign}${(absNum / 100000).toFixed(2)}L`;
+    }
+    if (absNum >= 1000) {
+        return `${sign}${(absNum / 1000).toFixed(1)}k`;
+    }
+    return `${sign}${absNum.toFixed(0)}`;
 }
 /**
  * Safely parses various date formats including DD/MM/YY and DD/MM/YYYY

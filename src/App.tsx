@@ -3,6 +3,8 @@ import { initGoogleAuth, requestAccessToken } from './auth/googleAuth';
 
 import { useTransactions } from './features/transactions/useTransactions';
 import { TransactionsPage } from './features/transactions/TransactionsPage';
+import { DashboardPage } from './features/dashboard/DashboardPage';
+import { FilterBar } from './features/transactions/components/FilterBar';
 import { ImportModal } from './features/transactions/components/ImportModal';
 import styles from './App.module.css';
 
@@ -10,15 +12,14 @@ import styles from './App.module.css';
 
 const CLIENT_ID = '1075777305463-k6611jptqjj5or1dnu7srj4npcp1bdtr.apps.googleusercontent.com';
 const SPREADSHEET_ID = '1ciwAn12o7wAlurrUbdamPlsiw7gZC_QRWCmeEGD7dg4';
-const RANGE = 'Transactions!A:M';
-
-/* ================= APP ================= */
+const RANGE = 'Transactions!A:N';
 
 /* ================= APP ================= */
 
 function App() {
   const [token, setToken] = useState<string | null>(null);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [view, setView] = useState<'transactions' | 'dashboard'>('transactions');
 
   const {
     headers,
@@ -58,6 +59,32 @@ function App() {
           <div className={styles.brandIcon}>T</div>
           Tracker
         </div>
+
+        {token && (
+          <nav className={styles.nav}>
+            <button
+              className={`${styles.navItem} ${view === 'transactions' ? styles.navItemActive : ''}`}
+              onClick={() => setView('transactions')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="3" y1="9" x2="21" y2="9"></line>
+                <line x1="9" y1="21" x2="9" y2="9"></line>
+              </svg>
+              Transactions
+            </button>
+            <button
+              className={`${styles.navItem} ${view === 'dashboard' ? styles.navItemActive : ''}`}
+              onClick={() => setView('dashboard')}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 3v18h18"></path>
+                <path d="M18.7 8l-5.1 5.2-2.8-2.7L7 14.3"></path>
+              </svg>
+              Dashboard
+            </button>
+          </nav>
+        )}
 
         {token && (
           <div className={styles.actions}>
@@ -127,18 +154,31 @@ function App() {
         </div>
       )}
 
-      {/* ================= TRANSACTIONS ================= */}
+      {/* ================= SHARED HEADERS ================= */}
       {token && (
-        <TransactionsPage
-          headers={headers as unknown as string[]}
-          rows={filteredRows}
+        <FilterBar
           filters={filters}
           setFilters={setFilters}
           distinct={distinct}
-          updateCell={updateCell}
-          isDirty={isDirty}
-          categoryMap={categoryMap}
         />
+      )}
+
+      {/* ================= CONTENT ================= */}
+      {token && (
+        <>
+          {view === 'transactions' ? (
+            <TransactionsPage
+              headers={headers as unknown as string[]}
+              rows={filteredRows}
+              updateCell={updateCell}
+              isDirty={isDirty}
+              categoryMap={categoryMap}
+              allTags={distinct(13)}
+            />
+          ) : (
+            <DashboardPage data={filteredRows} />
+          )}
+        </>
       )}
 
       <ImportModal

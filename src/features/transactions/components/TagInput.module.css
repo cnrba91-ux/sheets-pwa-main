@@ -1,0 +1,108 @@
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem;
+    min-height: 28px;
+    padding: 0.1rem 0.25rem;
+    border-radius: 4px;
+    transition: all 0.2s;
+    width: 100%;
+}
+
+.container:hover {
+    background: #f1f5f9;
+}
+
+.pillList {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+
+.pill {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--color-gray-700);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+    white-space: nowrap;
+}
+
+.removeBtn {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.9rem;
+    color: var(--color-gray-400);
+    cursor: pointer;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+}
+
+.removeBtn:hover {
+    color: var(--color-danger);
+}
+
+.input {
+    flex: 1;
+    min-width: 60px;
+    border: none;
+    background: transparent;
+    font-size: 0.75rem;
+    padding: 0.2rem 0;
+    outline: none;
+    color: var(--color-gray-700);
+}
+
+.input::placeholder {
+    color: transparent;
+    transition: color 0.2s;
+}
+
+.input:focus::placeholder {
+    color: var(--color-gray-400);
+}
+
+.inputWrapper {
+    position: relative;
+    flex: 1;
+    min-width: 60px;
+}
+
+.dropdown {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 100;
+    min-width: 150px;
+    background: white;
+    border-radius: 6px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border: 1px solid var(--color-gray-200);
+    margin-top: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.suggestion {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--color-gray-700);
+    transition: background 0.2s;
+}
+
+.suggestion:hover {
+    background: var(--color-gray-50);
+    color: var(--color-primary);
+}
+
+.suggestion:not(:last-child) {
+    border-bottom: 1px solid var(--color-gray-100);
+}

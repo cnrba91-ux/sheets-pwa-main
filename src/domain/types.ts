@@ -12,6 +12,7 @@ export interface Transaction {
     category: string;
     exclude: string; // "Yes" | "No"
     note: string;
+    tags: string;
 }
 
 export interface Account {
@@ -38,7 +39,8 @@ export const SCHEMA = [
     'Flow',
     'Category',
     'Exclude',
-    'Note'
+    'Note',
+    'Tags'
 ] as const;
 
 export type SchemaColumn = typeof SCHEMA[number];
@@ -58,6 +60,7 @@ export function rowToTransaction(row: string[]): Transaction {
         category: row[10] || '',
         exclude: row[11] || 'No',
         note: row[12] || '',
+        tags: row[13] || '',
     };
 }
 
@@ -75,6 +78,7 @@ export function transactionToRow(t: Transaction): string[] {
         t.flow,
         t.category,
         t.exclude,
-        t.note
+        t.note,
+        t.tags
     ];
 }

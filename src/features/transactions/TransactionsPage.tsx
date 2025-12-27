@@ -1,7 +1,6 @@
 import { formatDate, formatAmount } from '../../domain/formatters';
 import type { Filters } from './useTransactions';
 import { MatrixTable } from './MatrixTable.tsx';
-import { FilterBar } from './components/FilterBar';
 import styles from './TransactionsPage.module.css';
 
 type Props = {
@@ -18,27 +17,20 @@ type Props = {
 export function TransactionsPage({
     headers,
     rows,
-    filters,
-    setFilters,
-    distinct,
     updateCell,
     isDirty,
-    categoryMap
-}: Props) {
+    categoryMap,
+    allTags
+}: Omit<Props, 'filters' | 'setFilters' | 'distinct'> & { allTags: string[] }) {
     return (
         <div className={styles.canvas}>
-            <FilterBar
-                filters={filters}
-                setFilters={setFilters}
-                distinct={distinct}
-            />
-
             <MatrixTable
                 headers={headers}
                 rows={rows}
                 updateCell={updateCell}
                 isDirty={isDirty}
                 categoryMap={categoryMap}
+                allTags={allTags}
                 formatDate={formatDate}
                 formatAmount={formatAmount}
             />

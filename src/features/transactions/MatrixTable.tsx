@@ -1,5 +1,7 @@
-import { useState, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { FLOW_OPTIONS } from '../../domain/categories';
+import { getMonthYear } from '../../domain/formatters';
+import { TagInput } from './components/TagInput';
 import styles from './MatrixTable.module.css';
 
 type Props = {
@@ -8,6 +10,7 @@ type Props = {
     updateCell: (rowIdx: number, colIdx: number, value: string) => void;
     isDirty: (rowIdx: number, colIdx: number) => boolean;
     categoryMap: Record<string, string[]>;
+    allTags: string[];
     formatDate: (v: string) => string;
     formatAmount: (v: string) => string;
 };
@@ -21,10 +24,21 @@ export function MatrixTable({
     updateCell,
     isDirty,
     categoryMap,
+    allTags,
     formatDate,
     formatAmount
 }: Props) {
     const [visibleCount, setVisibleCount] = useState(INITIAL_ROWS);
+    const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+
+    const toggleMonth = (month: string) => {
+        setCollapsedMonths(prev => {
+            const next = new Set(prev);
+            if (next.has(month)) next.delete(month);
+            else next.add(month);
+            return next;
+        });
+    };
 
     // Reset visible count when filters change (rows change)
     useMemo(() => {
@@ -41,91 +55,154 @@ export function MatrixTable({
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            {headers.map(h => (
-                                <th key={h} className={styles.th}>{h}</th>
+                            {[1, 2, 4, 5, 8, 9, 10, 13, 12, 11].map((idx) => (
+                                <th key={idx} className={styles.th}>{headers[idx]}</th>
                             ))}
                         </tr>
                     </thead>
 
                     <tbody>
-                        {visibleRows.map((row, i) => {
-                            const needsAttention = !row[10] || row[10] === 'Select';
-                            return (
-                                <tr key={i} className={needsAttention ? styles.rowAttention : ''}>
-                                    {headers.map((_, j) => {
-                                        const cell = row[j] ?? '';
-                                        const isFlow = j === 9;
-                                        const isCategory = j === 10;
-                                        const isImpactsBudget = j === 11;
-                                        const isNote = j === 12;
+                        {(() => {
+                            let lastMonth = '';
+                            let lastDate = '';
+                            return visibleRows.map((row, i) => {
+                                const currentMonth = getMonthYear(row[0]) || 'Unknown';
+                                const currentDate = formatDate(row[0]);
 
-                                        const categories = categoryMap[row[9] ?? ''] || [];
+                                const showMonthHeader = currentMonth !== lastMonth;
+                                const isCollapsed = collapsedMonths.has(currentMonth);
 
-                                        return (
-                                            <td key={j} className={`${styles.td} ${isDirty(i, j) ? styles.dirty : ''}`}>
-                                                {isFlow && (
-                                                    <div className={styles.ghostWrapper}>
-                                                        <select
-                                                            className={`${styles.ghostSelect} ${cell === 'In' ? styles.textGreen : cell === 'Out' ? styles.textRed : styles.textBlue}`}
-                                                            value={cell}
-                                                            onChange={e => updateCell(i, j, e.target.value)}>
-                                                            {FLOW_OPTIONS.map((o: string) => (
-                                                                <option key={o} value={o}>{o}</option>
-                                                            ))}
-                                                        </select>
+                                if (showMonthHeader) lastMonth = currentMonth;
+
+                                const showDateHeader = !isCollapsed && currentDate !== lastDate;
+                                if (showDateHeader) lastDate = currentDate;
+
+                                const needsAttention = !row[10] || row[10] === 'Select';
+
+                                // Flow Icon Mapping
+                                const flowIcons: Record<string, string> = {
+                                    'In': '↑',
+                                    'Out': '↓',
+                                    'Savings': '💰',
+                                    'Transfer': '⇄'
+                                };
+
+                                return (
+                                    <React.Fragment key={i}>
+                                        {showMonthHeader && (
+                                            <tr className={styles.monthHeader} onClick={() => toggleMonth(currentMonth)}>
+                                                <td colSpan={10} className={styles.monthHeaderTd}>
+                                                    <div className={styles.monthHeaderLayout}>
+                                                        <span className={`${styles.collapseIcon} ${isCollapsed ? styles.collapsed : ''}`}>
+                                                            ▼
+                                                        </span>
+                                                        <span className={styles.monthHeaderText}>{currentMonth}</span>
                                                     </div>
-                                                )}
+                                                </td>
+                                            </tr>
+                                        )}
 
-                                                {isCategory && (
-                                                    <div className={styles.ghostWrapper}>
-                                                        <select
-                                                            className={styles.ghostSelect}
-                                                            value={cell}
-                                                            onChange={e => updateCell(i, j, e.target.value)}>
-                                                            <option value="">Select</option>
-                                                            {categories.map(o => (
-                                                                <option key={o} value={o}>{o}</option>
-                                                            ))}
-                                                        </select>
-                                                    </div>
-                                                )}
+                                        {!isCollapsed && showDateHeader && (
+                                            <tr className={styles.dateHeader}>
+                                                <td colSpan={10} className={styles.dateHeaderTd}>
+                                                    {currentDate}
+                                                </td>
+                                            </tr>
+                                        )}
 
-                                                {isImpactsBudget && (
-                                                    <div
-                                                        className={styles.clickableText}
-                                                        onClick={() => updateCell(i, j, cell === 'Yes' ? 'No' : 'Yes')}>
-                                                        {cell}
-                                                    </div>
-                                                )}
+                                        {!isCollapsed && (
+                                            <tr className={needsAttention ? styles.rowAttention : ''}>
+                                                {[1, 2, 4, 5, 8, 9, 10, 13, 12, 11].map((j) => {
+                                                    const cell = row[j] ?? '';
+                                                    const isFlow = j === 9;
+                                                    const isCategory = j === 10;
+                                                    const isImpactsBudget = j === 11;
+                                                    const isNote = j === 12;
+                                                    const isTags = j === 13;
+                                                    const isAmount = j === 8;
 
-                                                {isNote && (
-                                                    <input
-                                                        className={styles.noteInput}
-                                                        value={cell}
-                                                        onChange={e => updateCell(i, j, e.target.value)}
-                                                        placeholder="Add note..."
-                                                    />
-                                                )}
+                                                    const categories = categoryMap[row[9] ?? ''] || [];
 
-                                                {!isFlow && !isCategory && !isImpactsBudget && !isNote && (
-                                                    j === 0 ? <span className={styles.dateCell}>{formatDate(cell)}</span> :
-                                                        j === 8 ? (
-                                                            <span className={`${styles.amountCell} ${row[9] === 'In' ? styles.amountIn : row[9] === 'Out' ? styles.amountOut : ''}`}>
-                                                                {formatAmount(cell)}
-                                                            </span>
-                                                        ) :
-                                                            (j === 1 || j === 2 || j === 3 || j === 4) ? (
-                                                                <span className={styles.secondaryText}>{cell}</span>
-                                                            ) : (
-                                                                <span title={cell}>{cell}</span>
-                                                            )
-                                                )}
-                                            </td>
-                                        );
-                                    })}
-                                </tr>
-                            );
-                        })}
+                                                    return (
+                                                        <td key={j} className={`${styles.td} ${isDirty(i, j) ? styles.dirty : ''}`}>
+                                                            {isFlow && (
+                                                                <div className={styles.flowSelectWrapper}>
+                                                                    <span className={`${styles.flowIcon} ${cell === 'In' ? styles.textGreen : cell === 'Out' ? styles.textRed : cell === 'Savings' ? styles.textBlue : styles.textBlue}`}>
+                                                                        {flowIcons[cell] || '•'}
+                                                                    </span>
+                                                                    <select
+                                                                        className={styles.ghostSelect}
+                                                                        style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', cursor: 'pointer' }}
+                                                                        value={cell}
+                                                                        onChange={e => updateCell(i, j, e.target.value)}>
+                                                                        {FLOW_OPTIONS.map((o: string) => (
+                                                                            <option key={o} value={o}>{o}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                    <span className={styles.flowText}>{cell}</span>
+                                                                </div>
+                                                            )}
+
+                                                            {isCategory && (
+                                                                <div className={styles.ghostWrapper}>
+                                                                    <select
+                                                                        className={styles.ghostSelect}
+                                                                        value={cell}
+                                                                        onChange={e => updateCell(i, j, e.target.value)}>
+                                                                        <option value="">Select</option>
+                                                                        {categories.map(o => (
+                                                                            <option key={o} value={o}>{o}</option>
+                                                                        ))}
+                                                                    </select>
+                                                                </div>
+                                                            )}
+
+                                                            {isImpactsBudget && (
+                                                                <label className={styles.checkboxContainer} title={cell === 'Yes' ? 'Excluded' : 'Included'}>
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={cell === 'Yes'}
+                                                                        onChange={() => updateCell(i, j, cell === 'Yes' ? 'No' : 'Yes')}
+                                                                    />
+                                                                    <span className={styles.checkmark}></span>
+                                                                </label>
+                                                            )}
+
+                                                            {isNote && (
+                                                                <input
+                                                                    className={styles.noteInput}
+                                                                    value={cell}
+                                                                    onChange={e => updateCell(i, j, e.target.value)}
+                                                                    placeholder="Add note..."
+                                                                />
+                                                            )}
+
+                                                            {isTags && (
+                                                                <TagInput
+                                                                    value={cell}
+                                                                    onChange={val => updateCell(i, j, val)}
+                                                                    suggestions={allTags}
+                                                                />
+                                                            )}
+
+                                                            {!isFlow && !isCategory && !isImpactsBudget && !isNote && !isTags && (
+                                                                isAmount ? (
+                                                                    <span className={`${styles.amountCell} ${row[9] === 'In' ? styles.amountIn : row[9] === 'Out' ? styles.amountOut : ''}`}>
+                                                                        {formatAmount(cell)}
+                                                                    </span>
+                                                                ) : (
+                                                                    <span title={cell}>{cell}</span>
+                                                                )
+                                                            )}
+                                                        </td>
+                                                    );
+                                                })}
+                                            </tr>
+                                        )}
+                                    </React.Fragment>
+                                );
+                            });
+                        })()}
                     </tbody>
                 </table>
             </div>
@@ -194,10 +271,16 @@ export function MatrixTable({
                                                 ))}
                                             </select>
                                         </div>
-                                        <div
-                                            className={styles.clickableText}
-                                            onClick={() => updateCell(i, 11, row[11] === 'Yes' ? 'No' : 'Yes')}>
-                                            Exclude: {row[11]}
+                                        <div className={styles.fieldGroup} style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                            <span className={styles.fieldLabel}>Exclude</span>
+                                            <label className={styles.checkboxContainer} style={{ width: 'auto', height: 'auto' }}>
+                                                <input
+                                                    type="checkbox"
+                                                    checked={row[11] === 'Yes'}
+                                                    onChange={() => updateCell(i, 11, row[11] === 'Yes' ? 'No' : 'Yes')}
+                                                />
+                                                <span className={styles.checkmark}></span>
+                                            </label>
                                         </div>
                                     </div>
                                 </div>

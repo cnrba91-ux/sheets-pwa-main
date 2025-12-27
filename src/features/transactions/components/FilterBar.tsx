@@ -1,5 +1,6 @@
 import type { Filters } from '../useTransactions';
 import { MultiSelect } from './MultiSelect';
+import { Toggle } from './Toggle';
 import styles from './FilterBar.module.css';
 
 type Props = {
@@ -13,12 +14,27 @@ export function FilterBar({ filters, setFilters, distinct }: Props) {
         setFilters({ ...filters, [key]: value });
     };
 
-    const hasActiveFilters = Object.values(filters).some(val => Array.isArray(val) && val.length > 0) || filters.attentionOnly;
+    const hasActiveFilters = Object.values(filters).some(val => Array.isArray(val) && val.length > 0) || filters.attentionOnly || filters.search.trim() !== '';
 
     return (
         <div className={styles.bar}>
+            <div className={styles.searchContainer}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className={styles.searchIcon}>
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input
+                    type="text"
+                    className={styles.searchInput}
+                    placeholder="Search transactions..."
+                    value={filters.search}
+                    onChange={e => setFilters({ ...filters, search: e.target.value })}
+                />
+            </div>
+
+            <span className={styles.label}>FILTERS</span>
+
             <div className={styles.filters}>
-                <span className={styles.label}>FILTERS</span>
                 <MultiSelect
                     label="Bank"
                     options={distinct(1)}
@@ -49,11 +65,10 @@ export function FilterBar({ filters, setFilters, distinct }: Props) {
                     selected={filters.category}
                     onChange={(v) => updateFilter('category', v)}
                 />
-                <MultiSelect
-                    label="Exclude"
-                    options={distinct(11)}
-                    selected={filters.calc}
-                    onChange={(v) => updateFilter('calc', v)}
+                <Toggle
+                    label="Hide Excluded"
+                    checked={filters.calc.includes('No') && filters.calc.length === 1}
+                    onChange={(checked) => updateFilter('calc', checked ? ['No'] : [])}
                 />
 
                 {hasActiveFilters && (
@@ -66,6 +81,7 @@ export function FilterBar({ filters, setFilters, distinct }: Props) {
                             flow: [],
                             category: [],
                             calc: [],
+                            search: '',
                             attentionOnly: false
                         })}
                     >

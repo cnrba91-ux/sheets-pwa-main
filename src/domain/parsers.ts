@@ -66,7 +66,8 @@ export const BANK_TEMPLATES: BankTemplate[] = [
                     flow,
                     category: '',
                     exclude: 'No',
-                    note: ''
+                    note: '',
+                    tags: ''
                 };
             });
         }
@@ -102,7 +103,8 @@ export const BANK_TEMPLATES: BankTemplate[] = [
                     flow,
                     category: '',
                     exclude: 'No',
-                    note: ''
+                    note: '',
+                    tags: ''
                 };
             });
         }
@@ -110,35 +112,51 @@ export const BANK_TEMPLATES: BankTemplate[] = [
     {
         name: 'IDFC Savings',
         id: 'idfc-savings',
-        detect: (text) => text.includes('Payment type') && text.includes('Transaction description'),
+        detect: (text) => text.includes('Transaction Date') && text.includes('Particulars') && text.includes('Cheque No.'),
         parse: (text, bank, accountName) => {
             const lines = text.trim().split('\n').filter(l => l.trim());
-            const headerIdx = lines.findIndex(l => l.includes('Payment type'));
+            const headerIdx = lines.findIndex(l => l.includes('Transaction Date'));
             if (headerIdx === -1) return [];
+
+            const headers = lines[headerIdx].split('\t').map(h => h.trim().toLowerCase());
+            const dateIdx = headers.findIndex(h => h.includes('transaction date'));
+            const narrationIdx = headers.findIndex(h => h.includes('particulars'));
+            const refIdx = headers.findIndex(h => h.includes('cheque'));
+            const debitIdx = headers.findIndex(h => h.includes('debit'));
+            const creditIdx = headers.findIndex(h => h.includes('credit'));
+
             const dataLines = lines.slice(headerIdx + 1);
 
             return dataLines.map(line => {
                 const cols = line.split('\t');
-                const date = parseAnyDate(cols[0] || '');
-                const narration = cols[2] || '';
-                const amountStr = (cols[5] || '0').replace(/[^\d.-]/g, '');
-                const netAmount = parseFloat(amountStr);
-                const flow = netAmount < 0 ? 'Out' : 'In';
+                const date = parseAnyDate(cols[dateIdx] || '');
+                const narration = (cols[narrationIdx] || '').trim();
+                const ref = refIdx !== -1 ? cols[refIdx] : '';
+
+                const debitStr = (debitIdx !== -1 ? cols[debitIdx] : '0') || '0';
+                const creditStr = (creditIdx !== -1 ? cols[creditIdx] : '0') || '0';
+
+                const debit = parseFloat(debitStr.replace(/[^\d.-]/g, '')) || 0;
+                const credit = parseFloat(creditStr.replace(/[^\d.-]/g, '')) || 0;
+
+                const netAmount = credit - debit;
+                const flow = credit > 0 ? 'In' : 'Out';
 
                 return {
                     date,
                     bank,
                     account: accountName,
-                    refId: '',
+                    refId: cleanRefId(ref),
                     narration,
                     payee: extractPayee(narration),
-                    debit: netAmount < 0 ? Math.abs(netAmount) : 0,
-                    credit: netAmount > 0 ? netAmount : 0,
+                    debit,
+                    credit,
                     netAmount,
                     flow,
                     category: '',
                     exclude: 'No',
-                    note: ''
+                    note: '',
+                    tags: ''
                 };
             });
         }
@@ -147,8 +165,22 @@ export const BANK_TEMPLATES: BankTemplate[] = [
 
 function extractPayee(narration: string): string {
     if (!narration) return 'Unknown';
+
+    // 1. Common UPI patterns: UPI/NAME/REF/... or UPI/REF/NAME/...
+    if (narration.toUpperCase().startsWith('UPI')) {
+        const parts = narration.split('/');
+        // Often the 2nd or 3rd part is the name/merchant
+        const candidate = parts[2] || parts[3] || parts[1] || narration;
+        if (candidate && !/^\d+$/.test(candidate)) {
+            return candidate.trim();
+        }
+    }
+
+    // 2. Generic separators
     let p = narration.split('-')[1] || narration.split('to VPA')[1] || narration;
     p = p.split('-')[0].trim();
     if (!p) p = narration;
+
+    // Clean up numbers and extra spaces
     return p.replace(/\d+/g, '').replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ').trim() || 'Unknown';
 }

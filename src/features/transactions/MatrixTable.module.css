@@ -38,8 +38,8 @@
     padding: 0.4rem 0.6rem;
     text-align: left;
     font-weight: 600;
-    font-size: 0.65rem;
-    color: #64748b;
+    font-size: 0.7rem;
+    color: #000000;
     text-transform: uppercase;
     letter-spacing: 0.05em;
     border-bottom: 1px solid #e2e8f0;
@@ -55,58 +55,163 @@
     background: #f8fafc;
 }
 
+.table tbody tr:focus-within {
+    position: relative;
+    z-index: 50;
+    background: #f8fafc;
+}
+
 .td {
     padding: 0.35rem 0.6rem;
     font-size: 0.80rem;
-    color: #334155;
+    color: #0f172a;
+    /* Slate 900 for maximum sharpness */
+    font-weight: 400;
+    /* Matching weight for premium feel */
     border-bottom: 1px solid #f1f5f9;
     vertical-align: middle;
-    height: 34px;
+    height: 40px;
+    position: relative;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+/* ================= GROUPING HEADERS ================= */
+
+.monthHeader {
+    background: #f1f5f9;
+    cursor: pointer;
+    user-select: none;
+    border-top: 1px solid #e2e8f0;
+}
+
+.monthHeader:hover {
+    background: #e2e8f0;
+}
+
+.monthHeaderTd {
+    padding: 0 !important;
+    /* Reset for inner layout */
+}
+
+.monthHeaderLayout {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+}
+
+.monthHeaderText {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #334155;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.collapseIcon {
+    font-size: 0.6rem;
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.collapsed {
+    transform: rotate(-90deg);
+}
+
+.dateHeader {
+    background: #ffffff;
+}
+
+.dateHeaderTd {
+    padding: 0.4rem 1rem !important;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    border-bottom: 1px solid #f1f5f9;
+    border-left: 3px solid #cbd5e1;
+}
+
+/* Specific text columns that need ellipsis */
+.td:nth-child(3),
+.td:nth-child(4) {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
 }
 
-/* Narration - allow to shrink */
-.td:nth-child(5),
-.th:nth-child(5) {
-    min-width: 100px;
-    max-width: 300px;
+/* ================= COLUMN WIDTHS ================= */
+
+/* 1. Bank (Index 1) */
+.td:nth-child(1),
+.th:nth-child(1) {
+    min-width: 80px;
+    width: 80px;
 }
 
-/* Payee - allow to shrink */
-.td:nth-child(6),
-.th:nth-child(6) {
+/* 2. Account (Index 2) */
+.td:nth-child(2),
+.th:nth-child(2) {
+    min-width: 80px;
+    width: 80px;
+}
+
+/* 3. Narration (Index 4) */
+.td:nth-child(3),
+.th:nth-child(3) {
+    min-width: 150px;
+    max-width: 400px;
+}
+
+/* 4. Payee (Index 5) */
+.td:nth-child(4),
+.th:nth-child(4) {
     min-width: 100px;
     max-width: 120px;
 }
 
-/* Flow */
+/* 5. Net Amount (Index 8) */
+.td:nth-child(5),
+.th:nth-child(5) {
+    min-width: 100px;
+    width: 100px;
+    text-align: right;
+}
+
+/* 6. Flow (Index 9) */
+.td:nth-child(6),
+.th:nth-child(6) {
+    min-width: 120px;
+    width: 120px;
+}
+
+/* 7. Category (Index 10) */
+.td:nth-child(7),
+.th:nth-child(7) {
+    min-width: 180px;
+    width: 180px;
+}
+
+/* 8. Tags (Index 13) */
+.td:nth-child(8),
+.th:nth-child(8) {
+    min-width: 200px;
+    width: 220px;
+}
+
+/* 9. Note (Index 12) */
+.td:nth-child(9),
+.th:nth-child(9) {
+    min-width: 200px;
+    width: 200px;
+}
+
+/* 10. Exclude (Index 11) */
 .td:nth-child(10),
 .th:nth-child(10) {
-    min-width: 140px;
-    width: 140px;
-}
-
-/* Category */
-.td:nth-child(11),
-.th:nth-child(11) {
-    min-width: 160px;
-    width: 160px;
-}
-
-/* Exclude */
-.td:nth-child(12),
-.th:nth-child(12) {
-    min-width: 90px;
-    width: 90px;
-}
-
-/* Note */
-.td:nth-child(13),
-.th:nth-child(13) {
-    min-width: 160px;
-    width: 160px;
+    min-width: 60px;
+    width: 60px;
 }
 
 .td.dirty {
@@ -171,6 +276,64 @@
     text-decoration: underline;
 }
 
+/* ================= CUSTOM CHECKBOX ================= */
+.checkboxContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.checkboxContainer input {
+    position: absolute;
+    opacity: 0;
+    cursor: pointer;
+    height: 0;
+    width: 0;
+}
+
+.checkmark {
+    position: relative;
+    height: 18px;
+    width: 18px;
+    background-color: var(--color-white);
+    border: 2px solid var(--color-gray-300);
+    border-radius: 4px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.checkboxContainer:hover input~.checkmark {
+    border-color: var(--color-primary-light);
+    background-color: var(--color-gray-50);
+}
+
+.checkboxContainer input:checked~.checkmark {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+.checkboxContainer input:checked~.checkmark:after {
+    display: block;
+}
+
 .table tbody tr.rowAttention {
     background-color: #fff7ed;
 }
@@ -194,17 +357,18 @@
     border-radius: 4px;
     background: transparent;
     font-size: 0.8rem;
-    color: inherit;
+    color: #0f172a;
+    /* Slate 900 */
     cursor: pointer;
     padding: 0 0.5rem;
     transition: all 0.2s;
-    /* Appearance fix for select arrow */
     appearance: none;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 0.5rem center;
     background-size: 1rem;
     padding-right: 2rem;
+    font-family: inherit;
 }
 
 .ghostSelect:hover {
@@ -229,6 +393,17 @@
     transition: all 0.2s;
 }
 
+/* Smart Placeholders: Hide by default, show on row hover or inside focus */
+.noteInput::placeholder {
+    color: transparent;
+    transition: color 0.2s;
+}
+
+.table tbody tr:hover .noteInput::placeholder,
+.noteInput:focus::placeholder {
+    color: var(--color-gray-400);
+}
+
 .noteInput:hover {
     background: #f1f5f9;
 }
@@ -238,6 +413,39 @@
     border-color: #6366f1;
     outline: none;
 }
+
+/* ================= FLOW ICONS ================= */
+.flowSelectWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: background 0.2s;
+    width: fit-content;
+}
+
+.flowSelectWrapper:hover {
+    background: #f1f5f9;
+}
+
+.flowIcon {
+    font-size: 1.1rem;
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+}
+
+.flowText {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+
 
 /* ================= MOBILE ================= */
 .mobileOnly {

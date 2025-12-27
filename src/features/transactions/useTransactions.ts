@@ -13,6 +13,7 @@ export type Filters = {
     flow: string[];
     category: string[];
     calc: string[];
+    search: string;
     attentionOnly?: boolean;
 };
 
@@ -45,6 +46,7 @@ export function useTransactions() {
         flow: [],
         category: [],
         calc: [],
+        search: '',
         attentionOnly: false
     });
 
@@ -67,15 +69,19 @@ export function useTransactions() {
                 data = [headerRow];
             }
 
-            // First pass: auto-tagging map (payee + flow -> category)
-            const payeeMap: Record<string, string> = {};
+            // First pass: auto-tagging map (payee + flow -> {category, tags})
+            const suggestionMap: Record<string, { cat: string, tags: string }> = {};
             data.forEach((r: string[], i: number) => {
                 if (i === 0) return;
                 const payee = (r[5] || '').trim().toLowerCase();
                 const flow = (r[9] || '').trim();
                 const category = (r[10] || '').trim();
-                if (payee && flow && category && category !== 'Select' && category !== '') {
-                    payeeMap[`${payee}|${flow}`] = category;
+                const tags = (r[13] || '').trim();
+                if (payee && flow && (category || tags)) {
+                    suggestionMap[`${payee}|${flow}`] = {
+                        cat: category !== 'Select' ? category : '',
+                        tags
+                    };
                 }
             });
 
@@ -87,21 +93,29 @@ export function useTransactions() {
                 const copy = new Array(SCHEMA.length).fill('');
                 r.forEach((val, k) => { if (k < SCHEMA.length) copy[k] = val; });
 
-                // Auto-fill Category based on previous history
+                // Auto-fill Category/Tags based on previous history
                 const categoryEmpty = !copy[10] || copy[10] === 'Select' || copy[10] === '';
-                const excludeEmpty = !copy[11] || copy[11].trim() === '';
+                const tagsEmpty = !copy[13] || copy[13].trim() === '';
 
-                if (categoryEmpty) {
+                if (categoryEmpty || tagsEmpty) {
                     const payee = (copy[5] || '').trim().toLowerCase();
                     const flow = (copy[9] || '').trim();
                     const key = `${payee}|${flow}`;
-                    const suggested = payeeMap[key];
+                    const suggested = suggestionMap[key];
+
                     if (suggested) {
-                        copy[10] = suggested;
-                        newPending[`${i}-10`] = { rowIdx: i, colIdx: 10, value: suggested };
+                        if (categoryEmpty && suggested.cat) {
+                            copy[10] = suggested.cat;
+                            newPending[`${i}-10`] = { rowIdx: i, colIdx: 10, value: suggested.cat };
+                        }
+                        if (tagsEmpty && suggested.tags) {
+                            copy[13] = suggested.tags;
+                            newPending[`${i}-13`] = { rowIdx: i, colIdx: 13, value: suggested.tags };
+                        }
                     }
                 }
 
+                const excludeEmpty = !copy[11] || copy[11].trim() === '';
                 if (excludeEmpty) {
                     copy[11] = 'No';
                     newPending[`${i}-11`] = { rowIdx: i, colIdx: 11, value: 'No' };
@@ -127,16 +141,24 @@ export function useTransactions() {
     /* ---------- slicer helpers ---------- */
 
     const distinctValues = useMemo(() => {
-        // Updated indices: 1: Bank, 2: Account, 9: Flow, 10: Category, 11: Exclude
+        // Data indices: 1: Bank, 2: Account, 9: Flow, 10: Category, 11: Exclude, 13: Tags
         const maps: Record<string, Set<string>> = {
             1: new Set(), 2: new Set(), 9: new Set(), 10: new Set(), 11: new Set(),
-            month: new Set()
+            13: new Set(), month: new Set()
         };
         dataRows.forEach(r => {
             [1, 2, 9, 10, 11].forEach(idx => {
                 const val = (r[idx] || '').trim();
                 if (val) maps[idx].add(val);
             });
+            // Extract individual tags
+            const tagsStr = (r[13] || '').trim();
+            if (tagsStr) {
+                tagsStr.split(',').forEach(t => {
+                    const tag = t.trim();
+                    if (tag) maps[13].add(tag);
+                });
+            }
             // Extract Month
             const m = getMonthYear(r[0]);
             if (m) maps['month'].add(m);
@@ -166,12 +188,15 @@ export function useTransactions() {
             const matchesCategory = !filters.category.length || filters.category.includes(r[10] || '');
             const matchesExclude = !filters.calc.length || filters.calc.includes(r[11] || '');
 
+            const searchLower = (filters.search || '').trim().toLowerCase();
+            const matchesSearch = !searchLower || r.some(cell => (cell || '').toLowerCase().includes(searchLower));
+
             const needsAttention = !r[10] || r[10] === 'Select'; // Category empty
             const isDirty = !!pendingChanges[`${actualRowIdx}-10`]; // Locally modified category
 
             if (filters.attentionOnly && !needsAttention && !isDirty) return false;
 
-            return matchesBank && matchesAcc && matchesMonth && matchesFlow && matchesCategory && matchesExclude;
+            return matchesBank && matchesAcc && matchesMonth && matchesFlow && matchesCategory && matchesExclude && matchesSearch;
         });
 
         return filtered.sort((a, b) => {

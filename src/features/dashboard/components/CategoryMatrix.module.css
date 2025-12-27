@@ -1,0 +1,166 @@
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 1rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+    border: 1px solid var(--color-gray-100);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+    height: 100%;
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-gray-900);
+    letter-spacing: -0.01em;
+}
+
+.tableWrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--color-gray-100);
+}
+
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.75rem;
+}
+
+.th {
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    background: var(--color-gray-50);
+    color: var(--color-gray-500);
+    font-weight: 700;
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--color-gray-100);
+    white-space: nowrap;
+}
+
+.thSticky {
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: var(--color-gray-50);
+}
+
+.thTotal {
+    color: var(--color-gray-900);
+    text-align: right;
+}
+
+.td {
+    padding: 0.35rem 0.6rem;
+    border-bottom: 1px solid var(--color-gray-50);
+    color: var(--color-gray-700);
+    font-weight: 500;
+}
+
+.tdCategory {
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    background: white;
+    font-weight: 700;
+    color: var(--color-gray-900);
+    border-right: 1px solid var(--color-gray-100);
+    white-space: nowrap;
+    max-width: 120px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tdAmount {
+    text-align: right;
+    font-family: inherit;
+    font-weight: 600;
+}
+
+/* Heatmap Shading Backgrounds */
+.heatLevel0 {
+    background-color: transparent;
+}
+
+.heatLevel1 {
+    background-color: #fff5f5;
+}
+
+.heatLevel2 {
+    background-color: #ffe3e3;
+}
+
+.heatLevel3 {
+    background-color: #ffc9c9;
+}
+
+.heatLevel4 {
+    background-color: #ffa8a8;
+    color: #c92a2a;
+}
+
+.heatLevel5 {
+    background-color: #ff8787;
+    color: #a61e1e;
+    font-weight: 800;
+}
+
+.rowTotal {
+    background: var(--color-gray-50);
+}
+
+.rowTotal .td {
+    font-weight: 800;
+    color: var(--color-gray-900);
+    border-top: 2px solid var(--color-gray-100);
+}
+
+.grandTotal {
+    color: var(--color-primary);
+    font-weight: 800;
+    background: #eef2ff !important;
+}
+
+.flowHeader {
+    background: #f1f5f9;
+    padding: 0.5rem 0.6rem;
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--color-gray-600);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--color-gray-200);
+}
+
+.flowTotal {
+    color: var(--color-gray-400);
+    font-weight: 600;
+}
+
+.flowRow {
+    border-top: 1px solid var(--color-gray-200);
+}
+
+/* Custom Scrollbar */
+.tableWrapper::-webkit-scrollbar {
+    height: 6px;
+}
+
+.tableWrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb {
+    background: var(--color-gray-200);
+    border-radius: 10px;
+}
+
+.tableWrapper::-webkit-scrollbar-thumb:hover {
+    background: var(--color-gray-300);
+}
