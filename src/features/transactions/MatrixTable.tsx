@@ -55,7 +55,7 @@ export function MatrixTable({
                 <table className={styles.table}>
                     <thead>
                         <tr>
-                            {[1, 2, 4, 5, 8, 9, 10, 13, 12, 11].map((idx) => (
+                            {[1, 2, 4, 5, 8, 9, 10, 13, 12, 11, 14, 15].map((idx) => (
                                 <th key={idx} className={styles.th}>{headers[idx]}</th>
                             ))}
                         </tr>
@@ -77,12 +77,15 @@ export function MatrixTable({
                                 const showDateHeader = !isCollapsed && currentDate !== lastDate;
                                 if (showDateHeader) lastDate = currentDate;
 
-                                const needsAttention = !row[10] || row[10] === 'Select';
+                                const categories = categoryMap[row[9] ?? ''] || [];
+                                const needsAttention = !row[10] || row[10] === 'Select' || (row[10] && !categories.includes(row[10]));
 
                                 // Flow Icon Mapping
                                 const flowIcons: Record<string, string> = {
                                     'In': '↑',
                                     'Out': '↓',
+                                    'CC_Purchase': '💳',
+                                    'CC_Payment': '🔄',
                                     'Savings': '💰',
                                     'Transfer': '⇄'
                                 };
@@ -91,7 +94,7 @@ export function MatrixTable({
                                     <React.Fragment key={i}>
                                         {showMonthHeader && (
                                             <tr className={styles.monthHeader} onClick={() => toggleMonth(currentMonth)}>
-                                                <td colSpan={10} className={styles.monthHeaderTd}>
+                                                <td colSpan={12} className={styles.monthHeaderTd}>
                                                     <div className={styles.monthHeaderLayout}>
                                                         <span className={`${styles.collapseIcon} ${isCollapsed ? styles.collapsed : ''}`}>
                                                             ▼
@@ -104,7 +107,7 @@ export function MatrixTable({
 
                                         {!isCollapsed && showDateHeader && (
                                             <tr className={styles.dateHeader}>
-                                                <td colSpan={10} className={styles.dateHeaderTd}>
+                                                <td colSpan={12} className={styles.dateHeaderTd}>
                                                     {currentDate}
                                                 </td>
                                             </tr>
@@ -112,13 +115,15 @@ export function MatrixTable({
 
                                         {!isCollapsed && (
                                             <tr className={needsAttention ? styles.rowAttention : ''}>
-                                                {[1, 2, 4, 5, 8, 9, 10, 13, 12, 11].map((j) => {
+                                                {[1, 2, 4, 5, 8, 9, 10, 13, 12, 11, 14, 15].map((j) => {
                                                     const cell = row[j] ?? '';
                                                     const isFlow = j === 9;
                                                     const isCategory = j === 10;
                                                     const isImpactsBudget = j === 11;
                                                     const isNote = j === 12;
                                                     const isTags = j === 13;
+                                                    const isLinkedAccount = j === 14;
+                                                    const isLinkedRefId = j === 15;
                                                     const isAmount = j === 8;
 
                                                     const categories = categoryMap[row[9] ?? ''] || [];
@@ -185,7 +190,25 @@ export function MatrixTable({
                                                                 />
                                                             )}
 
-                                                            {!isFlow && !isCategory && !isImpactsBudget && !isNote && !isTags && (
+                                                            {isLinkedAccount && (
+                                                                <input
+                                                                    className={styles.noteInput}
+                                                                    value={cell}
+                                                                    onChange={e => updateCell(i, j, e.target.value)}
+                                                                    placeholder="Linked account..."
+                                                                />
+                                                            )}
+
+                                                            {isLinkedRefId && (
+                                                                <input
+                                                                    className={styles.noteInput}
+                                                                    value={cell}
+                                                                    onChange={e => updateCell(i, j, e.target.value)}
+                                                                    placeholder="Ref ID..."
+                                                                />
+                                                            )}
+
+                                                            {!isFlow && !isCategory && !isImpactsBudget && !isNote && !isTags && !isLinkedAccount && !isLinkedRefId && (
                                                                 isAmount ? (
                                                                     <span className={`${styles.amountCell} ${row[9] === 'In' ? styles.amountIn : row[9] === 'Out' ? styles.amountOut : ''}`}>
                                                                         {formatAmount(cell)}
@@ -212,7 +235,7 @@ export function MatrixTable({
                 <div className={styles.cardList}>
                     {visibleRows.map((row, i) => {
                         const categories = categoryMap[row[9] ?? ''] || [];
-                        const needsAttention = !row[10] || row[10] === 'Select';
+                        const needsAttention = !row[10] || row[10] === 'Select' || (row[10] && !categories.includes(row[10]));
 
                         return (
                             <div key={i} className={`${styles.card} ${needsAttention ? styles.cardAttention : ''}`}>
@@ -255,6 +278,30 @@ export function MatrixTable({
                                                 onChange={e => updateCell(i, 12, e.target.value)}
                                                 placeholder="Add a note..."
                                                 rows={1}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.fieldGroup}>
+                                        <label className={styles.fieldLabel}>Linked Account</label>
+                                        <div className={`${styles.mobileInputWrapper} ${isDirty(i, 14) ? styles.dirtyBorder : ''}`}>
+                                            <input
+                                                className={styles.mobileTextarea}
+                                                value={row[14] ?? ''}
+                                                onChange={e => updateCell(i, 14, e.target.value)}
+                                                placeholder="Linked account..."
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className={styles.fieldGroup}>
+                                        <label className={styles.fieldLabel}>Linked Ref ID</label>
+                                        <div className={`${styles.mobileInputWrapper} ${isDirty(i, 15) ? styles.dirtyBorder : ''}`}>
+                                            <input
+                                                className={styles.mobileTextarea}
+                                                value={row[15] ?? ''}
+                                                onChange={e => updateCell(i, 15, e.target.value)}
+                                                placeholder="Ref ID..."
                                             />
                                         </div>
                                     </div>

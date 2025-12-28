@@ -8,11 +8,13 @@ export interface Transaction {
     debit: number;        // Debit amount
     credit: number;       // Credit amount
     netAmount: number;    // Net amount
-    flow: string;         // "In", "Out", "Savings", "Transfer"
+    flow: string;         // "In", "Out", "CC_Purchase", "CC_Payment", "Transfer", "Savings"
     category: string;
     exclude: string; // "Yes" | "No"
     note: string;
     tags: string;
+    linkedAccount: string;  // For transfers/CC payments: the other account
+    linkedRefId: string;    // Group related transactions (e.g., billing cycle)
 }
 
 export interface Account {
@@ -25,7 +27,7 @@ export interface Category {
     category: string;
 }
 
-// Actual Google Sheet structure (13 columns)
+// Actual Google Sheet structure (16 columns)
 export const SCHEMA = [
     'Date',
     'Bank',
@@ -40,7 +42,9 @@ export const SCHEMA = [
     'Category',
     'Exclude',
     'Note',
-    'Tags'
+    'Tags',
+    'Linked Account',
+    'Linked Ref ID'
 ] as const;
 
 export type SchemaColumn = typeof SCHEMA[number];
@@ -61,6 +65,8 @@ export function rowToTransaction(row: string[]): Transaction {
         exclude: row[11] || 'No',
         note: row[12] || '',
         tags: row[13] || '',
+        linkedAccount: row[14] || '',
+        linkedRefId: row[15] || '',
     };
 }
 
@@ -79,6 +85,8 @@ export function transactionToRow(t: Transaction): string[] {
         t.category,
         t.exclude,
         t.note,
-        t.tags
+        t.tags,
+        t.linkedAccount,
+        t.linkedRefId
     ];
 }

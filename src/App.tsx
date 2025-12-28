@@ -12,7 +12,7 @@ import styles from './App.module.css';
 
 const CLIENT_ID = '1075777305463-k6611jptqjj5or1dnu7srj4npcp1bdtr.apps.googleusercontent.com';
 const SPREADSHEET_ID = '1ciwAn12o7wAlurrUbdamPlsiw7gZC_QRWCmeEGD7dg4';
-const RANGE = 'Transactions!A:N';
+const RANGE = 'Transactions!A:P';
 
 /* ================= APP ================= */
 

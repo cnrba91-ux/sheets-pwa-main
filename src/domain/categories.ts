@@ -28,6 +28,23 @@ export const CATEGORY_MAP: Record<string, string[]> = {
         'Travel'
     ],
 
+    CC_Purchase: [
+        'Bike Expenses',
+        'Bills & Recharge',
+        'Car Expenses',
+        'Car Loan',
+        'DN',
+        'Food & Dining',
+        'Groceries',
+        'Health & Insurance',
+        'Home Loan',
+        'Home Maintenance',
+        'Misc',
+        'Personal Expense',
+        'Shopping',
+        'Travel'
+    ],
+
     Savings: [
         'Chits',
         'Lent',
@@ -36,14 +53,17 @@ export const CATEGORY_MAP: Record<string, string[]> = {
     ],
 
     Transfer: [
-        'CC Repayment',
         'Self',
         'S',
         'Others'
+    ],
+
+    CC_Payment: [
+        'CC Payment'
     ]
 };
 
-export const FLOW_OPTIONS = ['In', 'Out', 'Savings', 'Transfer'];
+export const FLOW_OPTIONS = ['In', 'Out', 'CC_Purchase', 'CC_Payment', 'Transfer', 'Savings'];
 
 export const IMPACTS_BUDGET_OPTIONS = ['Yes', 'No'];
 

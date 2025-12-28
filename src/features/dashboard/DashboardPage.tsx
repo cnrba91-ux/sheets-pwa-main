@@ -17,24 +17,46 @@ export function DashboardPage({ data }: Props) {
         let tExpense = 0;
 
         data.forEach(r => {
+            const flow = r[9] || '';
+            const exclude = r[11] || 'No';
+
+            // Skip excluded transactions
+            if (exclude === 'Yes') return;
+
             const credit = Math.abs(parseFloat((r[7] || '0').replace(/[^\d.-]/g, '')) || 0);
             const debit = Math.abs(parseFloat((r[6] || '0').replace(/[^\d.-]/g, '')) || 0);
 
-            tIncome += credit;
-            tExpense += debit;
+            // Income: credits from "In" flow (salary, cashback, etc.)
+            if (flow === 'In' && credit > 0) {
+                tIncome += credit;
+            }
+
+            // Expenses: debits from Out, CC_Purchase, Savings
+            // EXCLUDE: CC_Payment and Transfer (these are just moving money)
+            if (['Out', 'CC_Purchase', 'Savings'].includes(flow) && debit > 0) {
+                tExpense += debit;
+            }
 
             const month = getMonthYear(r[0]);
             if (!month) return;
 
             if (!stats[month]) stats[month] = { income: 0, expense: 0 };
-            stats[month].income += credit;
-            stats[month].expense += debit;
 
-            // Matrix data for Out, Savings, and Transfer
-            if (r[9] === 'Out' || r[9] === 'Savings' || r[9] === 'Transfer') {
+            // Monthly income
+            if (flow === 'In' && credit > 0) {
+                stats[month].income += credit;
+            }
+
+            // Monthly expenses (exclude CC_Payment and Transfer)
+            if (['Out', 'CC_Purchase', 'Savings'].includes(flow) && debit > 0) {
+                stats[month].expense += debit;
+            }
+
+            // Matrix data for Out, CC_Purchase, Savings, and Transfer
+            if (['Out', 'CC_Purchase', 'Savings', 'Transfer'].includes(flow)) {
                 matrixItems.push({
                     month,
-                    flow: r[9],
+                    flow,
                     category: r[10] || 'Uncategorized',
                     amount: debit
                 });

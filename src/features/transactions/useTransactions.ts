@@ -191,7 +191,18 @@ export function useTransactions() {
             const searchLower = (filters.search || '').trim().toLowerCase();
             const matchesSearch = !searchLower || r.some(cell => (cell || '').toLowerCase().includes(searchLower));
 
-            const needsAttention = !r[10] || r[10] === 'Select'; // Category empty
+            const flow = (r[9] || '').trim();
+            const category = (r[10] || '').trim();
+            const validCategories = CATEGORY_MAP[flow];
+
+            // Needs attention if:
+            // 1. Category is empty or "Select"
+            // 2. Flow is valid but Category is not in the allowed list (undefined category)
+            const isMissing = !category || category === 'Select';
+            const isInvalid = !isMissing && validCategories && !validCategories.includes(category);
+
+            const needsAttention = isMissing || isInvalid;
+
             const isDirty = !!pendingChanges[`${actualRowIdx}-10`]; // Locally modified category
 
             if (filters.attentionOnly && !needsAttention && !isDirty) return false;
@@ -207,7 +218,16 @@ export function useTransactions() {
     }, [dataRows, filters]);
 
     const attentionCount = useMemo(() => {
-        return dataRows.filter(r => !r[10] || r[10] === 'Select').length;
+        return dataRows.filter(r => {
+            const flow = (r[9] || '').trim();
+            const category = (r[10] || '').trim();
+            const validCategories = CATEGORY_MAP[flow];
+
+            const isMissing = !category || category === 'Select';
+            const isInvalid = !isMissing && validCategories && !validCategories.includes(category);
+
+            return isMissing || isInvalid;
+        }).length;
     }, [dataRows]);
 
     const updateCell = (originalIdx: number, colIdx: number, value: string) => {

@@ -16,7 +16,7 @@ interface Props {
 
 export function CategoryMatrix({ data, months }: Props) {
     const matrix = useMemo(() => {
-        const flows = ['Out', 'Savings', 'Transfer'];
+        const flows = ['Out', 'CC_Purchase', 'Savings', 'Transfer'];
         const grid: Record<string, Record<string, number>> = {};
         const catTotals: Record<string, number> = {};
         const monthTotals: Record<string, number> = {};
